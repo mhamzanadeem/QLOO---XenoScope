@@ -1,0 +1,292 @@
+[
+  {
+    "id": "test:entity:0",
+    "name": "Copper & Paper",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:design",
+        "name": "Independent design",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:music",
+        "name": "Live music",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:craft",
+        "name": "Local craftsmanship",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Lahore"
+  },
+  {
+    "id": "test:entity:1",
+    "name": "The Courtyard Lab",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:books",
+        "name": "Book culture",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:music",
+        "name": "Live music",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:brunch",
+        "name": "Brunch",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Lahore"
+  },
+  {
+    "id": "test:entity:2",
+    "name": "Chapter House",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:design",
+        "name": "Independent design",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:books",
+        "name": "Book culture",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Lahore"
+  },
+  {
+    "id": "test:entity:3",
+    "name": "Kiln Coffee",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:music",
+        "name": "Live music",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:craft",
+        "name": "Local craftsmanship",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:brunch",
+        "name": "Brunch",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Lahore"
+  },
+  {
+    "id": "test:entity:4",
+    "name": "Juniper Studio",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:design",
+        "name": "Independent design",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:outdoors",
+        "name": "Outdoor gatherings",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:plant",
+        "name": "Plant-based dining",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Islamabad"
+  },
+  {
+    "id": "test:entity:5",
+    "name": "Trailside Table",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:outdoors",
+        "name": "Outdoor gatherings",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:brunch",
+        "name": "Brunch",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:plant",
+        "name": "Plant-based dining",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Islamabad"
+  },
+  {
+    "id": "test:entity:6",
+    "name": "Northlight Roasters",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:design",
+        "name": "Independent design",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:outdoors",
+        "name": "Outdoor gatherings",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Islamabad"
+  },
+  {
+    "id": "test:entity:7",
+    "name": "The Reading Room",
+    "description": "A fictional venue created to demonstrate cultural comparison. This is not a Qloo listing.",
+    "tags": [
+      {
+        "id": "test:tag:coffee",
+        "name": "Specialty coffee",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:books",
+        "name": "Book culture",
+        "category": "Arts & culture",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:outdoors",
+        "name": "Outdoor gatherings",
+        "category": "Lifestyle",
+        "source": "demo",
+        "illustrative": true
+      },
+      {
+        "id": "test:tag:plant",
+        "name": "Plant-based dining",
+        "category": "Food & drink",
+        "source": "demo",
+        "illustrative": true
+      }
+    ],
+    "affinity": null,
+    "popularity": null,
+    "geography": "Islamabad"
+  }
+]
