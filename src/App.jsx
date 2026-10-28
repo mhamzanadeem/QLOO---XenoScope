@@ -1,9 +1,12 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import CitySearch from "./CitySearch.jsx";
+import { cityScenarios } from "./scenarios.js";
+import { decisionBrief } from "../shared/decision.js";
+import { readableLabel, featureCategory } from "./labels.js";
+import { lazy, Suspense, useEffect, useMemo, useState, useId } from "react";
 import {
   Routes,
   Route,
   Link,
-  NavLink,
   useLocation,
   useNavigate,
   useParams,
@@ -46,7 +49,7 @@ const modes = [
   {
     id: "market",
     icon: MapPin,
-    name: "Market vs Market",
+    name: "City vs City",
     description: "Explore how cultural signals differ between two cities.",
     example: "Lahore ↔ Islamabad",
   },
@@ -73,9 +76,8 @@ const Button = ({ children, className = "", ...props }) => (
     {children}
   </button>
 );
-const Title = ({ eyebrow, title, children }) => (
+const Title = ({ title, children }) => (
   <header className="page-title">
-    <p className="eyebrow">{eyebrow}</p>
     <h1>{title}</h1>
     {children && <p className="intro">{children}</p>}
   </header>
@@ -136,7 +138,7 @@ export default function App() {
       <a href="#main" className="skip">
         Skip to content
       </a>
-      {landing ? (
+      {landing && (
         <nav className="landing-nav">
           <Link to="/" aria-label="XenoScope home">
             <img src="/brand/xenoscope-logo.svg" alt="XenoScope" width="172" />
@@ -147,47 +149,11 @@ export default function App() {
             <Link to="/saved">Saved explorations</Link>
           </div>
           <Link to="/explore" className="button small">
-            Open workspace <ArrowUpRight size={15} />
+            Compare cities <ArrowUpRight size={15} />
           </Link>
         </nav>
-      ) : (
-        <aside className="sidebar">
-          <Link to="/" className="brand">
-            <img src="/brand/xenoscope-logo.svg" alt="XenoScope" />
-          </Link>
-          <div className="nav-label">YOUR WORKSPACE</div>
-          <NavLink to="/explore">
-            <Compass size={19} /> Explore markets
-          </NavLink>
-          <NavLink to="/results">
-            <Layers3 size={19} /> Comparison
-          </NavLink>
-          <NavLink to="/saved">
-            <Bookmark size={19} /> Saved explorations
-          </NavLink>
-          <NavLink to="/methodology">
-            <FileText size={19} /> Methodology
-          </NavLink>
-          <div className="sidebar-bottom">
-            <div className="status-light" />
-            {config
-              ? config.liveConfigured
-                ? "Live Qloo configured"
-                : "Qloo configuration required"
-              : "Checking connection"}
-
-          </div>
-        </aside>
       )}
       <div className="main-wrap">
-        {!landing && (
-          <div className="topbar">
-            <span>Workspace</span>
-            <Link to="/build/market">
-              <Plus size={15} /> New exploration
-            </Link>
-          </div>
-        )}
         <main id="main" className={landing ? "" : "page"}>
           {configError && (
             <Notice error>
@@ -213,6 +179,7 @@ export default function App() {
             <Route path="/saved" element={<Saved setResult={setResult} />} />
             <Route path="/report" element={<Report result={result} />} />
             <Route path="/methodology" element={<Report />} />
+            <Route path="/guide" element={<TagGuide />} />
             <Route
               path="*"
               element={
@@ -236,93 +203,69 @@ export default function App() {
 
 function Landing() {
   return (
-    <>
-      <section className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">
-            <span className="line" /> CULTURAL INTELLIGENCE, IN FOCUS
-          </p>
-          <h1>
-            Compare markets.
-            <br /><span>Find cultural connections.</span>
-          </h1>
-          <p>
-            Compare places and interests with evidence from Qloo.
-          </p>
-          <div className="actions">
-            <Link className="button primary" to="/explore">
-              Start exploring <ArrowRight size={17} />
-            </Link>
-            <Link className="button" to="/build/market">
-              Compare markets <FlaskConical size={16} />
-            </Link>
-          </div>
-
+    <div className="investor-home">
+      <section className="investor-hero">
+        <div className="investor-hero-copy">
+          <p className="eyebrow">FOR YOUR NEXT BUSINESS MOVE</p>
+          <h1>Before you sign.<br /><em>Know what to investigate.</em></h1>
+          <p>Compare cities, explore relevant places, and turn your business idea into an evidence-backed research shortlist.</p>
+          <Link className="button primary" to="/explore">Start exploring <ArrowRight size={17} /></Link>
+          <a className="home-secondary" href="#what-you-get">See what you get <ArrowRight size={15} /></a>
+          <div className="home-audience">Opening a café, restaurant, hotel, or shop?</div>
         </div>
-        <div className="hero-art">
-          <div className="art-caption">
-            <span>THE XENOSCOPE LENS</span>
-            <span>01 / CULTURAL CONNECTIONS</span>
-          </div>
-          <img
-            src="/brand/xenoscope-hero.svg"
-            alt="Conceptual city landscape with a scanning beam revealing connections between buildings"
-          />
-          <div className="art-card">
-            <span className="crosshair">⌖</span>
-            <div>
-              Different places. Shared interests.
-              <small>Find the connections worth investigating.</small>
-            </div>
-          </div>
+        <div className="home-research-preview" aria-label="Illustration of the research process">
+          <div className="home-preview-top"><span className="home-preview-dot" /> FROM IDEA TO SHORTLIST <Compass size={18} /></div>
+          <div className="home-idea"><span>Your idea</span><h2>A café for readers.<br />A place to start.</h2><div className="home-pills"><span>Coffee</span><span>Reading space</span><span>Remote workers</span></div></div>
+          <div className="home-preview-cities"><div><MapPin size={21} /><strong>City A</strong><small>Explore the places</small></div><div><MapPin size={21} /><strong>City B</strong><small>Compare the evidence</small></div></div>
+          <div className="home-preview-outcome"><span className="recommendation-icon"><Check size={20} /></span><div><strong>A clearer next step.</strong><small>What to visit. What to verify. What’s still unknown.</small></div></div>
+          <span className="home-preview-label">Research workflow illustration</span>
         </div>
       </section>
-      <footer className="landing-footer">
-        <img src="/brand/xenoscope-logo.svg" width="155" alt="XenoScope" />
-        <span>
-          Cultural signals inform exploration. They do not predict business
-          success.
-        </span>
-        <Link to="/methodology">
-          Sources & methodology <ArrowUpRight size={14} />
-        </Link>
-      </footer>
-    </>
+      <section className="home-problem">
+        <span className="eyebrow">LESS GUESSWORK. BETTER QUESTIONS.</span>
+        <h2>A location is a commitment.<br />Start with evidence.</h2>
+        <p>One promising idea. Several possible locations. Get a structured starting point before the site visits and rent negotiations.</p>
+      </section>
+      <section id="what-you-get" className="home-services">
+        <div className="home-section-heading"><span className="eyebrow">WHAT YOU GET</span><h2>Research that moves you forward.</h2></div>
+        <div className="home-service-grid">
+          <Link to="/build/market" className="home-service"><MapPin size={26} /><span className="home-service-number">01</span><h3>Compare your cities.</h3><p>Explore relevant places and documented features side by side.</p><span className="text-link">City vs City <ArrowUpRight size={16} /></span></Link>
+          <Link to="/build/venue" className="home-service"><Building2 size={26} /><span className="home-service-number">02</span><h3>Learn from existing places.</h3><p>Use reference businesses to investigate related recommendations.</p><span className="text-link">Venue vs Venue <ArrowUpRight size={16} /></span></Link>
+          <Link to="/build/concept" className="home-service"><FlaskConical size={26} /><span className="home-service-number">03</span><h3>Explore two directions.</h3><p>Compare interest-led place samples for two ideas in one city.</p><span className="text-link">Concept vs Concept <ArrowUpRight size={16} /></span></Link>
+        </div>
+      </section>
+      <section className="home-evidence">
+        <div><span className="eyebrow">REASONS YOU CAN INSPECT</span><h2>Don’t just read a suggestion.<br />See what supports it.</h2></div>
+        <ul><li><Check size={18} /><span>Place-linked evidence</span></li><li><Check size={18} /><span>Your requirements, checked against available details</span></li><li><Check size={18} /><span>AI-assisted suggestions when available</span></li><li><Check size={18} /><span>Unknowns and practical next steps</span></li></ul>
+        <Link className="text-link" to="/methodology">How the research works <ArrowUpRight size={16} /></Link>
+      </section>
+      <section className="home-final-cta"><div><span className="eyebrow">BRING YOUR IDEA</span><h2>Leave with a plan to investigate.</h2><p>Choose a scenario or build your own brief.</p></div><Link className="button primary" to="/explore">Start your research <ArrowRight size={17} /></Link></section>
+      <footer className="home-footer"><Link to="/" className="home-wordmark">XenoScope</Link><p>Cultural evidence informs research. It does not predict demand or business success.</p><div><Link to="/guide">Reading the results</Link><Link to="/methodology">Sources & limitations</Link><Link to="/saved">Saved research</Link></div></footer>
+    </div>
   );
 }
 
 function Explore() {
   return (
     <>
-      <Title
-        eyebrow="01 / FRAME YOUR QUESTION"
-        title="What would you like to compare?"
-      >
-        Choose a comparison.
-      </Title>
+      <Title title="What would you like to compare?" />
       <div className="mode-grid">
-        {modes.map(({ id, icon: Icon, name, description, example }, i) => (
+        {modes.map(({ id, icon: Icon, name, description }) => (
           <Link className="mode-card" key={id} to={`/build/${id}`}>
-            <span className="card-index">0{i + 1}</span>
-            <div className={`icon-box ${i === 1 ? "violet-bg" : ""}`}>
-              <Icon size={28} />
-            </div>
+            <div className="icon-box"><Icon size={28} /></div>
             <h2>{name}</h2>
             <p>{description}</p>
-            <span className="mode-example">{example}</span>
-            <span className="text-link">
-              Build comparison <ArrowRight size={17} />
-            </span>
+            <span className="text-link">Compare <ArrowRight size={17} /></span>
           </Link>
         ))}
       </div>
-
     </>
   );
 }
 
-function LiveSearch({ kind, onSelect, selected, label }) {
-  const [query, setQuery] = useState("");
+function LiveSearch({ kind, onSelect, selected, label, hint, initialQuery = "" }) {
+  const hintId = useId();
+  const [query, setQuery] = useState(initialQuery);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -363,6 +306,7 @@ function LiveSearch({ kind, onSelect, selected, label }) {
         <div className="input-icon">
           <Search size={16} />
           <input
+            aria-describedby={hint ? hintId : undefined}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -370,13 +314,14 @@ function LiveSearch({ kind, onSelect, selected, label }) {
             }}
             placeholder={
               kind === "tag"
-                ? "Search tags, e.g. coffee"
+                ? "Search interests, e.g. coffee"
                 : "Search a venue by name"
             }
             autoComplete="off"
           />
         </div>
       </label>
+      {hint && <p id={hintId} className="field-hint">{hint}</p>}
       {selected && (
         <span className="selected-tag">
           <Check size={14} />
@@ -401,7 +346,7 @@ function LiveSearch({ kind, onSelect, selected, label }) {
                 }}
               >
                 {item.name}
-                <small>{item.geography || item.category || item.id}</small>
+                <small>{item.geography || featureCategory(item)}</small>
               </button>
             </li>
           ))}
@@ -437,14 +382,86 @@ function Builder({ setResult, result }) {
     edit?.candidates || initial.map((label) => ({ label })),
   );
   const [tag, setTag] = useState(
-    edit?.tagId ? { id: edit.tagId, name: edit.tagId } : null,
+    edit?.interests?.[0] || (edit?.tagId ? { id: edit.tagId, name: edit.tagId } : null),
   );
+  const [extraInterests, setExtraInterests] = useState(edit?.interests?.slice(1) || []);
+  const [audience, setAudience] = useState(edit?.brief?.audience || "");
+  const [features, setFeatures] = useState(edit?.brief?.features.join(", ") || "");
+  const [decision, setDecision] = useState(edit?.brief?.decision || "city");
+  const [constraints, setConstraints] = useState(edit?.brief?.constraints || "");
+  const [referenceVenue, setReferenceVenue] = useState(edit?.referenceVenues?.[0] || edit?.referenceVenue || null);
+  const [extraReferences, setExtraReferences] = useState(edit?.referenceVenues?.slice(1) || []);
+
+  const [scenarioId, setScenarioId] = useState("");
+  const [scenarioLoading, setScenarioLoading] = useState(false);
+  const [scenarioMessage, setScenarioMessage] = useState("");
+  useEffect(() => {
+    const scenario = cityScenarios.find(item => item.id === scenarioId);
+    if (!scenario || mode !== "market") return;
+    const controller = new AbortController();
+    setScenarioLoading(true);
+    setScenarioMessage("Finding a live cultural interest and reference business…");
+    const queries = scenario.interests || [scenario.interest];
+    Promise.allSettled([
+      ...queries.map(query => api(`/tags/search?q=${encodeURIComponent(query)}`, undefined, controller.signal)),
+      api(`/entities/search?q=${encodeURIComponent(scenario.interest)}`, undefined, controller.signal),
+    ]).then(results => {
+      if (controller.signal.aborted) return;
+      const chosenInterests = [];
+      results.slice(0, queries.length).forEach((result, index) => {
+        const tags = result.status === "fulfilled" ? result.value.tags || [] : [];
+        const eligible = tags.filter(item => item.id?.startsWith("urn:tag:") && item.id.split(":").includes("place"));
+        const chosen = eligible.find(item => item.name.toLowerCase() === queries[index].toLowerCase()) || eligible[0];
+        if (chosen && !chosenInterests.some(item => item.id === chosen.id)) chosenInterests.push(chosen);
+      });
+      const chosen = chosenInterests[0];
+      const venueResult = results.at(-1);
+      const entities = venueResult.status === "fulfilled" ? venueResult.value.entities || [] : [];
+      const references = [...new Map(entities.filter(item => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id)).map(item => [item.id.toLowerCase(), { id: item.id, name: item.name }])).values()].slice(0, 3);
+      const reference = references[0];
+      setTag(chosen || null);
+      setReferenceVenue(reference || null);
+      setExtraReferences(references.slice(1));
+      setExtraInterests(chosenInterests.slice(1));
+      setScenarioMessage(`${chosenInterests.length} of 3 distinct live interests and ${references.length} of 3 example reference businesses found. ${chosenInterests.length < 3 || references.length < 3 ? "Some searches had no distinct match; review or add selections manually. " : ""}Review before running.`);
+      setScenarioLoading(false);
+    });
+    return () => controller.abort();
+  }, [scenarioId, mode]);
+
+  function applyScenario(id) {
+    setScenarioId(id);
+    setScenarioMessage("");
+    setScenarioLoading(false);
+    const scenario = cityScenarios.find(item => item.id === id);
+    if (!scenario) return;
+    setConcept(scenario.business);
+    setAudience(scenario.audience);
+    setFeatures(scenario.features);
+    setCandidates([{ label: "" }, { label: "" }]);
+    setConstraints(scenario.constraints);
+    setDecision("city");
+    setReferenceVenue(null);
+    setExtraReferences([]);
+    setExtraInterests([]);
+    setTag(null);
+    setResearch(false);
+    setError("");
+  }
   const [loading, setLoading] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!loading) return;
+    const started = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [loading]);
+  const progressLabel = elapsed < 2 ? "Sending request…" : elapsed < 15 ? "Waiting for Qloo…" : "Still waiting for results…";
   const [research, setResearch] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
     setCandidates(edit?.candidates || initial.map((label) => ({ label })));
-    setTag(edit?.tagId ? { id: edit.tagId, name: edit.tagId } : null);
+    setTag(edit?.interests?.[0] || (edit?.tagId ? { id: edit.tagId, name: edit.tagId } : null));
     setError("");
     setConcept(edit?.concept || (mode === "venue" ? "Venue cultural comparison" : "Specialty coffee"));
     setCity(edit?.location || "Lahore");
@@ -464,11 +481,17 @@ function Builder({ setResult, result }) {
       location: mode === "concept" ? city : undefined,
       candidates,
       tagId: tag?.id,
+      interests: mode === "market" ? [tag, ...extraInterests].filter(Boolean) : undefined,
+      referenceVenue: referenceVenue || undefined,
+      referenceVenues: [referenceVenue, ...extraReferences].filter(Boolean),
+      brief: { audience, features: features.split(",").map(value => value.trim()).filter(Boolean), decision: mode === "market" ? "city" : decision, constraints },
     });
     if (!parsed.success) {
       setError(parsed.error.issues.map((i) => i.message).join(" "));
       return;
     }
+    if (loading || scenarioLoading) return;
+    setElapsed(0);
     setLoading(true);
     try {
       const data = await api(research ? "/research" : "/compare", parsed.data);
@@ -481,10 +504,17 @@ function Builder({ setResult, result }) {
     }
   }
   return (
-    <>
-      <Link to="/explore" className="back-link">
-        <ChevronLeft size={16} /> All exploration modes
-      </Link>
+    <div className="builder-page">
+      <Link to="/explore" className="back-link"><ChevronLeft size={16} /> Comparison types</Link>
+      {mode === "market" && <section className="scenario-picker">
+        <label htmlFor="city-scenario">Try a scenario</label>
+        <select id="city-scenario" value={scenarioId} disabled={loading} onChange={e => applyScenario(e.target.value)}>
+          <option value="">Choose an example to fill the form</option>
+          {cityScenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.name}</option>)}
+        </select>
+        <p className="field-hint">Examples fill the brief and leave both cities for you to enter, then select a live place-related interest and example reference business. References are search examples, not endorsements. Budgets are illustrative. Review and edit before running.</p>
+        {scenarioMessage && <p role="status" className="field-hint">{scenarioMessage}</p>}
+      </section>}
       <Title
         eyebrow="02 / BUILD YOUR COMPARISON"
         title={modes.find((m) => m.id === mode).name}
@@ -498,12 +528,13 @@ function Builder({ setResult, result }) {
             <Source source="live" />
           </div>
           <p className="field-hint">
-            Select tags or venues from search results.
+            Choose an interest or a place from the search results.
           </p>
           {mode !== "venue" && (
             <label className="field">
               {mode === "concept" ? "Exploration question" : "Business concept"}
               <input
+                aria-describedby="concept-help"
                 required
                 minLength={2}
                 maxLength={100}
@@ -512,6 +543,19 @@ function Builder({ setResult, result }) {
               />
             </label>
           )}
+          {mode !== "venue" && <div id="concept-help" className="field-hint input-help">
+            <p>{mode === "market" ? "Describe the business you want to explore in both cities. Include what you plan to offer and who it is for. Keep it to a short phrase (2–100 characters)." : "Write the question you want to investigate about the two concepts in your chosen city (2–100 characters)."}</p>
+            <p><strong>Example:</strong> {mode === "market" ? "A specialty coffee shop with a reading space for students and remote workers." : "Should I explore a specialty coffee shop or an independent bookshop in Lahore?"}</p>
+            <p>This describes your research. The interest you select below determines the cultural data retrieved.</p>
+          </div>}
+          <fieldset className="business-brief">
+            <legend>Your business brief</legend>
+            <label>Who is it for?<input maxLength={300} value={audience} onChange={e => setAudience(e.target.value)} placeholder="Students and remote workers" /></label>
+            <label>Required features<input value={features} onChange={e => setFeatures(e.target.value)} placeholder="Wi-Fi, quiet seating, reading space" aria-describedby="features-help" /></label>
+            <p id="features-help" className="field-hint">Separate up to 12 features with commas. We check matching feature labels and flag anything unverified; this does not add new Qloo search filters.</p>
+            {mode === "market" ? <p className="field-hint"><strong>Your decision:</strong> Which of these two cities to investigate for your business. Neighborhood and property selection require a separate local study.</p> : <label>What are you deciding?<select value={decision} onChange={e => setDecision(e.target.value)}><option value="city">Which city to investigate</option><option value="concept">Which business concept to investigate</option></select></label>}
+            <label>Budget and other constraints<textarea rows={3} maxLength={500} value={constraints} onChange={e => setConstraints(e.target.value)} placeholder="Monthly rent budget, seating capacity, opening hours…" /></label>
+          </fieldset>
           {mode === "concept" && (
             <label className="field">
               Shared location
@@ -524,12 +568,13 @@ function Builder({ setResult, result }) {
               />
             </label>
           )}
+          {mode === "market" && <p className="field-hint">Search worldwide cities by name, state, or country. Suggestions depend on the installed city dataset; Qloo coverage can differ. You can also enter a city manually.</p>}
           <div className="candidate-inputs">
             {candidates.map((candidate, i) => (
               <div className={`candidate-input candidate-${i}`} key={i}>
                 <div className="section-head">
                   <span className="eyebrow">
-                    CANDIDATE {i === 0 ? "A" : "B"}
+                    {mode === "market" ? "City" : mode === "venue" ? "Venue" : "Concept"} {i === 0 ? "A" : "B"}
                   </span>
                   <button
                     type="button"
@@ -556,19 +601,23 @@ function Builder({ setResult, result }) {
                       )
                     }
                   />
+                ) : mode === "market" ? (
+                  <CitySearch label={`City ${i === 0 ? "A" : "B"}`} value={candidate.label} onChange={value => updateCandidate(i, { label: value })} />
                 ) : (
                   <label>
-                    {mode === "market" ? "Market" : "Concept"}
+                    Concept
                     <input
                       required
                       minLength={2}
                       maxLength={100}
+                      list={mode === "market" ? "city-suggestions" : undefined}
+                      className={mode === "market" && !candidate.label ? "city-required" : ""}
                       value={candidate.label}
                       onChange={(e) =>
                         updateCandidate(i, { label: e.target.value })
                       }
                       placeholder={
-                        mode === "market" ? "City name" : "Concept label"
+                        mode === "market" ? "Enter your city" : "Concept label"
                       }
                     />
                   </label>
@@ -576,7 +625,7 @@ function Builder({ setResult, result }) {
                 {mode === "concept" && (
                   <LiveSearch
                     kind="tag"
-                    label={`Verified tag for concept ${i === 0 ? "A" : "B"}`}
+                    label={`Interest for concept ${i === 0 ? "A" : "B"}`}
                     selected={
                       candidate.tagId ? { name: candidate.label } : null
                     }
@@ -593,18 +642,38 @@ function Builder({ setResult, result }) {
               </div>
             ))}
           </div>
+          {mode === "market" && <div className="reference-venue">
+            <LiveSearch kind="entity" label="Reference business (optional)" selected={null} onSelect={item => {
+              if (!item) return;
+              if (!referenceVenue) setReferenceVenue(item);
+              else if (item.id !== referenceVenue.id && !extraReferences.some(reference => reference.id === item.id) && extraReferences.length < 2) setExtraReferences([...extraReferences, item]);
+            }} hint="You can select up to 3 reference businesses. They guide the style of recommendations in both cities, not measured demand." />
+            <div className="tag-list">{[referenceVenue, ...extraReferences].filter(Boolean).map(reference => <button type="button" className="button small" key={reference.id} aria-label={`Remove reference ${reference.name}`} onClick={() => {
+              const remaining = [referenceVenue, ...extraReferences].filter(item => item && item.id !== reference.id);
+              setReferenceVenue(remaining[0] || null); setExtraReferences(remaining.slice(1));
+            }}>{reference.name} <X size={14} /></button>)}</div>
+
+          </div>}
           {mode === "market" && (
             <>
               <LiveSearch
                 kind="tag"
-                label="Verified cultural tag"
-                selected={tag}
-                onSelect={setTag}
+                label="Cultural interest"
+                key={scenarioId}
+                hint="You can select up to 3 cultural interests (our app’s request limit, not a Qloo-wide limit). Results include places matching any selected interest, not necessarily all. Each interest adds one live request per city. Search for a cultural interest related to your business, then select a matching result. For a coffee shop, type coffee and choose Coffee in a place-related category. Typing alone does not select an interest. The same interest is used for both markets; results depend on Qloo’s coverage."
+                selected={null}
+                onSelect={item => {
+                  if (!item) return;
+                  if (!tag) setTag(item);
+                  else if (item.id !== tag.id && !extraInterests.some(interest => interest.id === item.id) && extraInterests.length < 2) setExtraInterests([...extraInterests, item]);
+                }}
               />
-              <p className="field-hint">
-                Select a tag compatible with places. Coverage can vary by
-                location.
-              </p>
+              <div className="tag-list">{[tag, ...extraInterests].filter(Boolean).map(interest => <button type="button" className="button small" key={interest.id} aria-label={`Remove interest ${interest.name}`} onClick={() => {
+                const remaining = [tag, ...extraInterests].filter(item => item && item.id !== interest.id);
+                setTag(remaining[0] || null); setExtraInterests(remaining.slice(1));
+              }}>{interest.name} <X size={14} /></button>)}</div>
+
+
             </>
           )}
           {mode === "venue" && (
@@ -618,50 +687,30 @@ function Builder({ setResult, result }) {
               {error}
             </Notice>
           )}
-          <label className="research-toggle"><input type="checkbox" checked={research} onChange={e => setResearch(e.target.checked)} /> Investigate coverage and suggest a next step</label>
+          {mode !== "market" && <label className="research-toggle"><input type="checkbox" checked={research} onChange={e => setResearch(e.target.checked)} /> <span>Investigate coverage and suggest a next step</span></label>}
           <div className="form-bottom">
-            <span>
-              Compare cultural signals.
-            </span>
-            <Button className="primary" disabled={loading} type="submit">
+            <div className="comparison-progress" role="status" aria-live="polite" aria-atomic="true">
+              {loading ? <>
+                <span>{elapsed < 2 ? "Starting your comparison." : elapsed < 15 ? "Request sent. Waiting for Qloo’s response." : "Qloo has not returned results yet. You can keep this page open."}</span>
+                <small aria-hidden="true">{elapsed}s elapsed</small>
+              </> : <span>Compare cultural signals.</span>}
+            </div>
+            <Button className="primary" disabled={loading || scenarioLoading} aria-busy={loading || scenarioLoading} type="submit">
               {loading ? (
                 <>
-                  <LoaderCircle className="spin" size={17} /> Retrieving
-                  signals…
+                  <LoaderCircle className="spin" size={17} /> {progressLabel}
                 </>
               ) : (
                 <>
-                  Run comparison <ArrowRight size={17} />
+                  {scenarioLoading ? "Preparing scenario…" : "Run comparison"} <ArrowRight size={17} />
                 </>
               )}
             </Button>
           </div>
         </form>
-        <aside className="builder-aside">
-          <div className="icon-box">
-            <Compass size={26} />
-          </div>
-          <h3>
-            Start with curiosity.
-            <br />
-            Leave with better questions.
-          </h3>
-          <p>
-            We align cultural tags across Qloo’s returned entities, highlight
-            differences, and show what’s missing.
-          </p>
-          <ol>
-            <li>Compare the same kind of evidence</li>
-            <li>Keep the source in view</li>
-            <li>Validate in the real world</li>
-          </ol>
-          <div className="small-print">
-            All new explorations use live Qloo data. Cultural signals are
-            hypotheses to validate, not predictions.
-          </div>
-        </aside>
+
       </div>
-    </>
+    </div>
   );
 }
 
@@ -683,11 +732,25 @@ function Empty({
   );
 }
 
-function Results({ result }) {
+export function Results({ result, setResult }) {
+  const [pageLoading, setPageLoading] = useState(false);
+  const [pageError, setPageError] = useState("");
+  async function loadQlooPage(page) {
+    if (!setResult || pageLoading) return;
+    setPageLoading(true); setPageError("");
+    try { setResult(await api("/places/page", { ...result.request, page })); }
+    catch (e) { setPageError(e.message); }
+    finally { setPageLoading(false); }
+  }
   const [differences, setDifferences] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("difference");
+  const [page, setPage] = useState(1);
+  const [presence, setPresence] = useState("");
+  const [minimum, setMinimum] = useState(0);
+  const [gap, setGap] = useState(0);
+  useEffect(() => { setPage(1); }, [query, category, sort, differences, presence, minimum, gap, result?.id]);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const analysis = useMemo(
@@ -699,27 +762,38 @@ function Results({ result }) {
     setQuery("");
     setCategory("");
     setDifferences(false);
+    setPresence(""); setMinimum(0); setGap(0);
   }, [result?.id]);
   if (!result) return <Empty />;
+  if (result.candidates.every(candidate => candidate.entities.length === 0) && (result.paging?.page || 1) === 1) return (
+    <section className="panel research-brief">
+      <h1>No places matched this comparison</h1>
+      <p>Qloo responded, but returned no places for either {result.candidates[0].label} or {result.candidates[1].label} with your selected interest.</p>
+      <p>Try another place-related interest or a more specific city name, including its country. An empty response can reflect coverage or filter compatibility; it does not mean the cities have no interest in your concept.</p>
+      <Link className="button primary" to={`/build/${result.request.mode}?edit=1`}>Edit comparison <ArrowRight size={16} /></Link>
+      {result.research?.alternatives.length > 0 && <p>Alternative interests to search: {result.research.alternatives.map(tag => tag.name).join(", ")}</p>}
+      <details><summary>Request details</summary>{result.candidates.map(candidate => <div key={candidate.label}><h2>{candidate.label}</h2><pre>{JSON.stringify(candidate.provenance.query || {}, null, 2)}</pre></div>)}</details>
+    </section>
+  );
   const rows = filterRows(analysis.rows, {
     differences,
     query,
     category,
     sort,
-  });
+  }).filter(row =>
+    (!presence || (presence === "shared" ? row.shared : presence === "a" ? row.a > 0 && row.b === 0 : row.b > 0 && row.a === 0)) &&
+    Math.max(row.a, row.b) >= minimum && Math.abs(row.delta) >= gap
+  );
+  const recommendation = decisionBrief(result);
+  const pageCount = Math.max(1, Math.ceil(rows.length / 10));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = rows.slice((currentPage - 1) * 10, currentPage * 10);
   return (
-    <>
-      {result?.research && <section className="panel research-brief">
-        <h2>Research brief</h2>
-        <p>{result.research.nextStep}</p>
-        {result.research.evidence.map(e => <p key={e.id}><Link to={`/findings/${encodeURIComponent(e.id)}`}>{e.name}</Link> ({e.counts.join(" / ")} returned places)</p>)}
-        <details><summary>Research activity</summary><ol>{result.research.trace.map(t => <li key={t.action}><strong>{t.action}</strong>: {t.detail}</li>)}</ol>
-        {result.research.alternatives.length > 0 && <p>Alternative tags: {result.research.alternatives.map(t => t.name).join(", ")}</p>}
-        <p>{result.research.caveat}</p></details>
-      </section>}
-
+    <div className="results-layout">
+      <ResultsOutline hasAI={result.ai?.status === "ready"} hasResearch={Boolean(result.research)} />
+      <div className="results-content">
       <div className="breadcrumb">
-        EXPLORATIONS <span>/</span> {result.request.mode.toUpperCase()}{" "}
+        RESEARCH <span>/</span> {result.request.mode === "market" ? "CITY VS CITY" : result.request.mode.toUpperCase()}{" "}
         COMPARISON
       </div>
       <div className="results-title">
@@ -743,6 +817,7 @@ function Results({ result }) {
             {saved ? <Check size={16} /> : <Bookmark size={16} />}{" "}
             {saved ? "Saved locally" : "Save exploration"}
           </Button>
+          <Link className="button" to="/saved">Saved explorations</Link>
           <Link className="button primary" to="/report">
             <Download size={16} /> Export report
           </Link>
@@ -759,11 +834,57 @@ function Results({ result }) {
           <SlidersHorizontal size={14} /> Edit comparison
         </Link>
       </div>
-      <div className="comparison-candidates">
+      <p className="comparison-received" role="status">{result.candidates.some(candidate => candidate.entities.length === 0) ? "Qloo returned results for only one option. This comparison has incomplete coverage." : "Qloo response received. Your comparison is ready."}</p>
+
+      <section id="decision" className="panel decision-brief">
+        <div className="decision-heading"><span className="recommendation-icon"><Compass size={24} /></span><div><span className="eyebrow">YOUR RESEARCH SHORTLIST</span><h2>Your next decision</h2></div></div>
+        <p className="decision-recommendation">{recommendation.recommendation}</p>
+        <p>This is a research suggestion based on returned places, not a demand forecast.</p>
+        {result.request.brief?.audience && <p><strong>Intended audience:</strong> {result.request.brief.audience} (your brief; not independently verified).</p>}
+        <details className="brief-details"><summary>How your requirements compare</summary>
+        {recommendation.requirements.length ? recommendation.requirements.map(row => <div className="requirement-row" key={row.feature}>
+          <strong>{row.feature}</strong>
+          {row.matches.map((matches, i) => <div key={i}><span>{result.candidates[i].label}: </span>{matches.length ? <><span>{matches.length} returned places with a matching feature label. </span>{matches.slice(0, 3).map(place => <Link className="evidence-link" key={place.id} to={`/findings/${encodeURIComponent(place.id)}`}>{place.name}</Link>)}</> : <span>Not verified in this sample; check during a visit.</span>}</div>)}
+        </div>) : <p>Add required features in <Link to={`/build/${result.request.mode}?edit=1`}>your brief</Link> to check them against returned place information.</p>}
+        <p className="field-hint">Matches use exact feature labels with punctuation ignored. Similar wording may be missed. Missing metadata does not mean a facility is absent.</p>
+        </details><details className="brief-details"><summary>Suggested places and supporting evidence</summary>
+        <p>Shortlists prioritize explicit feature matches, then alphabetical order. They are examples from the returned sample, not a complete competitor list or a commercial ranking.</p>
+        <div className="city-evidence-grid">{recommendation.cityEvidence.map(city => <section key={city.label}>
+          <h3>{city.label}</h3><p>{city.sampleSize} places returned · {city.documentedRequirements} of {recommendation.requirements.length} requirements have matching labels.</p>
+          {city.shortlist.map(place => <article className="requirement-row" key={place.id}>
+            <Link className="evidence-link" to={`/findings/${encodeURIComponent(place.id)}`}>{place.name}</Link>
+            {place.website && <a className="evidence-link" href={place.website} target="_blank" rel="noreferrer">Business website</a>}
+            <p>{place.matchedFeatures.length ? `Matching features: ${place.matchedFeatures.join(", ")}` : "No requested features verified; inspect the place details."}</p>
+            {place.description && <p>{place.description.slice(0, 240)}</p>}
+          </article>)}
+          <details><summary>Common features in this sample</summary><ul>{city.commonFeatures.map(feature => <li key={feature.id}><Link to={`/findings/${encodeURIComponent(feature.id)}`}>{feature.name}</Link>: {feature.count} returned places</li>)}</ul></details>
+        </section>)}</div>
+        </details><h3>Suggested next steps</h3><ol>{recommendation.nextSteps.map(step => <li key={step}>{step}</li>)}</ol>
+        <details><summary>What remains unknown</summary><ul>{recommendation.unknowns.map(item => <li key={item}>{item}</li>)}</ul></details>
+      </section>
+
+      {result.ai?.status === "ready" && <section id="ai-brief" className="panel decision-brief">
+        <h2>AI-assisted investor brief</h2><p className="decision-recommendation">{result.ai.headline}</p>
+        <p>Suggestions based on a small selection of returned Qloo places. Verify before committing.</p>
+        <ul>{result.ai.findings?.map((finding, i) => <li key={i}>{finding.text}<div>{finding.evidenceIds.map(id => <Link className="evidence-link" key={id} to={`/findings/${encodeURIComponent(id)}`}>{result.candidates.flatMap(c => c.entities).find(e => e.id === id)?.name || "Inspect evidence"}</Link>)}</div></li>)}</ul>
+        <h3>Risks and missing information</h3><ul>{result.ai.risks?.map(risk => <li key={risk}>{risk}</li>)}</ul>
+        <h3>Suggested actions</h3><ol>{result.ai.nextSteps?.map(step => <li key={step}>{step}</li>)}</ol>
+        <details><summary>AI usage</summary><p>{result.ai.model} · {result.ai.inputTokens} input tokens · {result.ai.outputTokens} output tokens {result.ai.cached ? "· reused cached brief; no new AI call" : "· one AI call"}</p></details>
+      </section>}
+      {result.ai?.status === "unavailable" && <Notice>AI summary unavailable: {result.ai.reason} The source evidence below is still available.</Notice>}
+      {result?.research && <section id="research-activity" className="panel research-brief">
+        <h2>Research activity</h2>
+        <p>{result.research.nextStep}</p>
+        {result.research.evidence.map(e => <p key={e.id}><Link to={`/findings/${encodeURIComponent(e.id)}`}>{e.name}</Link> ({e.counts.join(" / ")} returned places)</p>)}
+        <details><summary>See research tool activity</summary><ol>{result.research.trace.map(t => <li key={t.action}><strong>{t.action}</strong>: {t.detail}</li>)}</ol>
+        {result.research.alternatives.length > 0 && <p>Alternative interests: {result.research.alternatives.map(t => t.name).join(", ")}</p>}
+        <p>{result.research.caveat}</p></details>
+      </section>}
+
+      <div id="cities" className="comparison-candidates">
         {result.candidates.map((candidate, i) => (
           <section className={`candidate-panel candidate-${i}`} key={i}>
             <div className="section-head">
-              <p className="eyebrow">CANDIDATE {i === 0 ? "A" : "B"}</p>
               <MapPin size={18} />
             </div>
             <h2>{candidate.label}</h2>
@@ -772,7 +893,7 @@ function Results({ result }) {
                 ? result.request.location
                 : result.request.mode === "venue"
                   ? "Venue cultural exploration"
-                  : "Market cultural exploration"}
+                  : "Market"}
             </p>
             <div className="candidate-stats">
               <div>
@@ -783,7 +904,7 @@ function Results({ result }) {
                 <strong>
                   {analysis.coverage[i].tagged}/{candidate.entities.length}
                 </strong>
-                <span>entities with tags</span>
+                <span>places with details</span>
               </div>
               <div>
                 <strong>
@@ -795,13 +916,24 @@ function Results({ result }) {
                     ).size
                   }
                 </strong>
-                <span>unique tags</span>
+                <span>interests and features</span>
               </div>
             </div>
           </section>
         ))}
         <span className="center-vs">VS</span>
       </div>
+      <section id="places" className="panel entity-section">
+        <div className="section-head"><h2>Places to investigate</h2><span className="muted">Qloo page {result.paging?.page || 1}</span></div>
+        <p>Each Qloo page returns up to 50 places per interest in each city. Duplicate places are combined. Counts and charts describe this page, not the full market.</p>
+        <div className="entity-columns">{result.candidates.map((candidate, i) => <PlaceBrowser key={`${result.id}-${i}`} candidate={candidate} />)}</div>
+        {result.paging && <nav className="pagination" aria-label="Qloo result pages">
+          <Button disabled={pageLoading || result.paging.page <= 1} onClick={() => loadQlooPage(result.paging.page - 1)}>Previous Qloo page</Button>
+          <span role="status">{pageLoading ? "Fetching more places from Qloo…" : `Qloo page ${result.paging.page}`}</span>
+          <Button disabled={pageLoading || !result.paging.hasMore} onClick={() => loadQlooPage(result.paging.page + 1)}>Load next Qloo page</Button>
+        </nav>}
+        {pageError && <Notice error>{pageError}</Notice>}
+      </section>
       <section className="insight-strip">
         <Sparkles size={22} />
         <div>
@@ -810,38 +942,24 @@ function Results({ result }) {
         </div>
       </section>
       <div className="results-grid">
-        <section className="panel signal-panel">
+        <section id="comparison" className="panel signal-panel">
           <div className="section-head">
             <div>
               <p className="eyebrow">CULTURAL CONNECTIONS</p>
-              <h2>Where the patterns diverge</h2>
+              <h2>Compare what matters</h2>
             </div>
-            <span className="count-label">{rows.length} tags</span>
+            <span className="count-label">{rows.length} features</span>
           </div>
           <p className="muted">
-            Number of returned entities carrying each tag. No affinity or demand
-            score.
+            Number of returned places with each interest or feature. No demand
+            score. <Link className="text-link" to="/guide">How to read these results</Link>
           </p>
-          <div className="chart-legend">
-            <span>
-              <i /> {result.candidates[0].label}
-            </span>
-            <span>
-              <i /> {result.candidates[1].label}
-            </span>
-          </div>
-          <Suspense fallback={<p role="status">Loading chart…</p>}>
-            <SignalChart
-              rows={rows}
-              labels={result.candidates.map((c) => c.label)}
-            />
-          </Suspense>
           <div className="filters">
             <div className="input-icon">
               <Search size={15} />
               <input
                 aria-label="Filter signals"
-                placeholder="Find a cultural signal…"
+                placeholder="Find an interest or feature…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -853,7 +971,7 @@ function Results({ result }) {
             >
               <option value="">All categories</option>
               {[...new Set(analysis.rows.map((r) => r.category))].map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>{readableLabel(c)}</option>
               ))}
             </select>
             <select
@@ -866,6 +984,11 @@ function Results({ result }) {
               <option value="a">Candidate A count</option>
               <option value="b">Candidate B count</option>
             </select>
+          </div>
+          <div className="custom-filters">
+            <label>Appears in<select value={presence} onChange={e => setPresence(e.target.value)}><option value="">Either option</option><option value="shared">Both options</option><option value="a">{result.candidates[0].label} only</option><option value="b">{result.candidates[1].label} only</option></select></label>
+            <label>Minimum place count<input type="number" min="0" max="150" value={minimum} onChange={e => setMinimum(Math.min(150, Math.max(0, Number(e.target.value))))} /></label>
+            <label>Minimum count difference<input type="number" min="0" max="150" value={gap} onChange={e => setGap(Math.min(150, Math.max(0, Number(e.target.value))))} /></label>
           </div>
           <div className="filter-meta">
             <label className="checkbox">
@@ -883,12 +1006,27 @@ function Results({ result }) {
                 setQuery("");
                 setCategory("");
                 setSort("difference");
+                setPresence(""); setMinimum(0); setGap(0);
               }}
             >
               Reset filters
             </button>
           </div>
-          <div className="table-scroll">
+          <div className="chart-legend">
+            <span>
+              <i /> {result.candidates[0].label}
+            </span>
+            <span>
+              <i /> {result.candidates[1].label}
+            </span>
+          </div>
+          <Suspense fallback={<p role="status">Loading chart…</p>}>
+            <SignalChart
+              rows={pageRows}
+              labels={result.candidates.map((c) => c.label)}
+            />
+          </Suspense>
+          <div id="evidence" className="table-scroll">
             <table>
               <caption className="sr-only">
                 Cultural tag counts in returned entities, accessible alternative
@@ -896,20 +1034,20 @@ function Results({ result }) {
               </caption>
               <thead>
                 <tr>
-                  <th>Signal / tag</th>
+                  <th>Interest or feature</th>
                   <th>{result.candidates[0].label}</th>
                   <th>{result.candidates[1].label}</th>
                   <th>Evidence</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {pageRows.map((row) => (
                   <tr key={row.id}>
                     <td>
                       <Link to={`/findings/${encodeURIComponent(row.id)}`}>
                         {row.name}
                       </Link>
-                      <small>{row.category}</small>
+                      <small className="feature-badge">{featureCategory(row)}</small>
                     </td>
                     <td className="cyan">{row.a || "Not returned"}</td>
                     <td className="violet">{row.b || "Not returned"}</td>
@@ -926,15 +1064,20 @@ function Results({ result }) {
               </tbody>
             </table>
           </div>
+          {rows.length > 0 && <nav className="pagination" aria-label="Signal table pagination">
+            <Button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Previous</Button>
+            <span role="status">{(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, rows.length)} of {rows.length} · Page {currentPage} of {pageCount}</span>
+            <Button disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Next</Button>
+          </nav>}
           {!rows.length && (
             <p className="empty">
-              No tags match these filters. Reset filters to see all available
+              No interests or features match these filters. Reset filters to see all available
               signals.
             </p>
           )}
           <p className="source-note">
             Source: Qloo /v2/insights.{" "}
-            Computed by counting unique tags per returned entity.
+            Computed by counting interests and features per returned entity.
           </p>
         </section>
         <aside className="result-aside">
@@ -954,7 +1097,7 @@ function Results({ result }) {
                   />
                 </div>
                 <p>
-                  {c.tagged} of {c.total} entities have tags
+                  {c.tagged} of {c.total} places have feature details
                 </p>
                 <p>{c.geography} have geographic metadata</p>
               </div>
@@ -978,55 +1121,16 @@ function Results({ result }) {
           </section>
         </aside>
       </div>
-      <section className="panel entity-section">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">BEHIND THE SIGNALS</p>
-            <h2>Explore the returned places</h2>
-          </div>
-          <span className="muted">Inspect an entity to see its source</span>
-        </div>
-        <div className="entity-columns">
-          {result.candidates.map((c, i) => (
-            <div key={i}>
-              <h3 className={i ? "violet" : "cyan"}>{c.label}</h3>
-              {!c.entities.length && (
-                <p>No entities returned. Try another query.</p>
-              )}
-              {c.entities.map((e) => (
-                <Link
-                  className="entity-row"
-                  key={e.id}
-                  to={`/findings/${encodeURIComponent(e.id)}`}
-                >
-                  <span className="entity-icon">
-                    <Building2 size={18} />
-                  </span>
-                  <div>
-                    <strong>{e.name}</strong>
-                    <small>
-                      {e.tags
-                        .slice(0, 2)
-                        .map((t) => t.name)
-                        .join(" · ") || "Tag metadata unavailable"}
-                    </small>
-                  </div>
-                  <ArrowUpRight size={16} />
-                </Link>
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
+      <InvestorChecklist key={result.id} />
       <Notice>
         {limitations[0]} Demographic, heatmap, and trend data are not returned
         by this comparison. <Link to="/report">Inspect methodology</Link>.
       </Notice>
-    </>
+    </div></div>
   );
 }
 
-function Finding({ result }) {
+export function Finding({ result }) {
   const { id } = useParams();
   if (!result)
     return <Empty title="Open a comparison to inspect its findings." />;
@@ -1046,21 +1150,23 @@ function Finding({ result }) {
       <Title eyebrow="EVIDENCE / FINDING DETAIL" title={item.name}>
         Inspect the source before interpreting the signal.
       </Title>
+      {entity && <FindingExtras result={result} entity={entity} />}
       <div className="detail-layout">
         <section className="panel">
           <Source source={result.source} />
+          {tag && <span className="feature-badge">{featureCategory(tag)}</span>}
           <h2>
             {tag
-              ? "A cultural tag in the returned results"
+              ? "An interest or place feature"
               : "A returned place"}
           </h2>
           <p>
             {tag
-              ? "This tag appeared on the entities listed below. Counts refer only to the bounded result sets."
+              ? "The places below carry this feature. Counts describe these returned places only."
               : entity.description ||
                 "No description was returned by the source."}
           </p>
-          <div className="source-id">Source ID: {id}</div>
+          <details><summary>Technical source details</summary><div className="source-id">Source ID: {id}</div></details>
           {result.candidates.map((c, i) => {
             const evidence = c.entities.filter((e) =>
               tag ? e.tags.some((t) => t.id === id) : e.id === id,
@@ -1071,7 +1177,7 @@ function Finding({ result }) {
                   {c.label}{" "}
                   <span className="muted">
                     / {evidence.length}{" "}
-                    {tag ? "entities with this tag" : "matching entities"}
+                    {tag ? "places with this feature" : "matching places"}
                   </span>
                 </h3>
                 {evidence.length ? (
@@ -1080,8 +1186,11 @@ function Finding({ result }) {
                       <strong>{e.name}</strong>
                       <p>
                         {e.tags.map((t) => t.name).join(" · ") ||
-                          "Tags unavailable"}
+                          "Feature details unavailable"}
                       </p>
+                      {e.website && <a className="evidence-link" href={e.website} target="_blank" rel="noreferrer">Business website</a>}
+                      {e.address && <p>{e.address}</p>}
+                      {e.explanation && <details><summary>Qloo recommendation explanation</summary><pre>{e.explanation}</pre></details>}
                       {!tag && (
                         <p>
                           Affinity: {e.affinity ?? "Unavailable"} · Popularity:{" "}
@@ -1109,17 +1218,17 @@ function Finding({ result }) {
           <h3>How to read this finding</h3>
           <p>
             {tag?.shared
-              ? "This tag appeared in both result sets. Its presence is a shared cultural connection."
+              ? "This feature appears among returned places on both sides."
               : tag
-                ? "This tag appeared in one result set but not the other. Investigate the difference as a hypothesis."
+                ? "This feature appears on only one side of the returned sample. Explore why before drawing conclusions."
                 : "This entity is evidence returned for the query. Its inclusion is not a business recommendation."}
           </p>
           <Notice>{limitations[0]}</Notice>
-          <h3>Related returned tags</h3>
+          <h3>Related interests and features</h3>
           <div className="tag-list">
             {(entity?.tags || []).map((t) => (
               <Link to={`/findings/${encodeURIComponent(t.id)}`} key={t.id}>
-                {t.name}
+                {t.name} <span className="feature-badge">{featureCategory(t)}</span>
               </Link>
             ))}
           </div>
@@ -1266,7 +1375,7 @@ function Report({ result }) {
             </p>
             <p>
               Both result sets use the same entity category. Live comparisons
-              request at most 20 places per candidate. Counts refer only to
+              request up to 50 places per interest per city page. Counts refer only to
               returned entities.
             </p>
             <div className="table-scroll">
@@ -1400,4 +1509,113 @@ function Report({ result }) {
       )}
     </div>
   );
+}
+
+function TagGuide() {
+  return <section className="panel research-brief tag-guide">
+    <Link to="/results" className="back-link"><ChevronLeft size={16} /> Back to results</Link>
+    <h1>Tags, signals, and evidence</h1>
+    <h2>What is a tag?</h2>
+    <p>A tag is a label Qloo attaches to an entity, such as a place. It can describe an offering, genre, feature, or other attribute. A Coffee tag may describe a place’s offering; an accessibility tag describes a different kind of attribute. Tags are not all customer interests.</p>
+    <h2>Readable categories</h2><p>Morning can appear with a “Time of day” badge. Accessibility describes a place feature. Technical IDs are kept in expandable source details.</p><details><summary>How technical identifiers work</summary>
+    <p>A URN is a structured identifier. In this example, “urn” identifies the identifier format, “tag” identifies a tag, “accessibility” names its attribute family, and “place” identifies the entity domain. Additional segments, if present, identify a more specific attribute. The prefix alone does not tell you which accessibility feature a place has; inspect the full tag name and ID.</p></details>
+    <h2>What do the counts mean?</h2>
+    <p>If Lahore shows 7 and Islamabad shows 3, seven returned places in the Lahore sample and three in the Islamabad sample carry that tag. Each tag is counted once per place. The difference is 4 places, not a popularity percentage or demand score. “Not returned” does not mean the attribute is absent from the city.</p>
+    <h2>What is a cultural signal?</h2>
+    <p>Here it means a tag found in the returned sample. It is a clue to investigate, not proof of an audience preference or business opportunity.</p>
+    <h2>What is evidence?</h2>
+    <p>The Evidence link opens the returned places carrying a tag, alongside source IDs and query provenance. This lets you inspect what supports the displayed count. It verifies the sample’s metadata, not citywide demand or financial success.</p>
+    <h2>How do filters work?</h2>
+    <p>Search matches tag names. Categories use the category metadata returned by Qloo. “Appears in” selects shared or one-sided tags. Minimum place count applies to either sample; minimum count difference uses the absolute difference. “Show differences only” means returned on just one side. Filters combine, and Reset filters clears them. Each table and chart page contains up to ten matching tags.</p>
+  </section>;
+}
+
+function ResultsOutline({ hasAI, hasResearch }) {
+  const [active, setActive] = useState("decision");
+  const sections = [["decision", "Overview"], ["cities", "City snapshots"], ["places", "Places to investigate"], ["comparison", "Compare what matters"], ["evidence", "Evidence table"], ...(hasAI ? [["ai-brief", "AI brief"]] : []), ...(hasResearch ? [["research-activity", "Research activity"]] : []), ["site-checks", "Before you commit"]];
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible[0]) setActive(visible[0].target.id);
+    }, { rootMargin: "-10% 0px -65% 0px", threshold: 0 });
+    for (const [id] of sections) { const node = document.getElementById(id); if (node) observer.observe(node); }
+    return () => observer.disconnect();
+  }, [hasAI, hasResearch]);
+  return <nav className="results-outline" aria-label="Results page outline">
+    <Link to="/" className="outline-brand">XenoScope<span>Location research</span></Link>
+    <p className="outline-label">ON THIS PAGE</p>
+    {sections.map(([id, label], index) => <a key={id} href={`#${id}`} aria-current={active === id ? "location" : undefined} onClick={() => setActive(id)}><span className="outline-index">{String(index + 1).padStart(2, "0")}</span>{label}</a>)}
+    <div className="outline-note"><Info size={16} /><span>Evidence first.<br />Verify before investing.</span></div>
+  </nav>;
+}
+function InvestorChecklist() {
+  const items = ["Visit shortlisted places and verify your required facilities.", "Interview prospective customers during your planned opening hours.", "Collect comparable rent and fit-out quotations.", "Check permitted use, utilities, access, parking, and lease terms.", "Test prices and the concept with a small pilot."];
+  const [checked, setChecked] = useState([]);
+  return <section id="site-checks" className="panel investor-checklist">
+    <div className="section-head"><h2>Before you commit</h2><span className="count-label">{checked.length} / {items.length} checked</span></div>
+    <p>Use this checklist on site. Checks are temporary and are not independently verified.</p>
+    {items.map((item, index) => <label key={item}><input type="checkbox" checked={checked.includes(index)} onChange={event => setChecked(previous => event.target.checked ? [...previous, index] : previous.filter(value => value !== index))} /><span>{item}</span></label>)}
+  </section>;
+}
+
+function PlaceBrowser({ candidate }) {
+  const [query, setQuery] = useState("");
+  const [feature, setFeature] = useState("");
+  const [hasLocation, setHasLocation] = useState(false);
+  const [hasWebsite, setHasWebsite] = useState(false);
+  const [page, setPage] = useState(1);
+  const rows = candidate.entities.filter(entity => `${entity.name} ${entity.address || ""} ${entity.geography || ""}`.toLowerCase().includes(query.toLowerCase()) && (!feature || entity.tags.some(tag => tag.id === feature)) && (!hasLocation || entity.location || entity.address) && (!hasWebsite || entity.website));
+  const pages = Math.max(1, Math.ceil(rows.length / 10)); const current = Math.min(page, pages);
+  return <div className="place-browser"><h3>{candidate.label}</h3>
+    <label>Search places or location<input value={query} onChange={e => { setQuery(e.target.value); setPage(1); }} placeholder="Name, address, or city" /></label>
+    <label>Feature<select value={feature} onChange={e => { setFeature(e.target.value); setPage(1); }}><option value="">All features</option>{[...new Map(candidate.entities.flatMap(entity => entity.tags).map(tag => [tag.id, tag])).values()].sort((a,b)=>a.name.localeCompare(b.name)).map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}</select></label>
+    <div className="place-filter-checks"><label><input type="checkbox" checked={hasLocation} onChange={e=>{setHasLocation(e.target.checked);setPage(1);}} />With location</label><label><input type="checkbox" checked={hasWebsite} onChange={e=>{setHasWebsite(e.target.checked);setPage(1);}} />With website</label></div>
+    <p>{rows.length} matching places on this Qloo page</p>
+    {rows.slice((current-1)*10,current*10).map(entity => <Link className="entity-row" key={entity.id} to={`/findings/${encodeURIComponent(entity.id)}`}><span className="entity-icon"><Building2 size={18}/></span><div><strong>{entity.name}</strong><small>{entity.address || entity.geography || "Location details unavailable"}</small><small>{entity.tags.slice(0,2).map(tag=>tag.name).join(" · ")}</small></div><ArrowUpRight size={16}/></Link>)}
+    {!rows.length && <p>No matching places on this page. Adjust filters or load another Qloo page.</p>}
+    {rows.length > 10 && <nav className="pagination" aria-label={`${candidate.label} place pagination`}><Button disabled={current===1} onClick={()=>setPage(current-1)}>Previous places</Button><span>{current} / {pages}</span><Button disabled={current===pages} onClick={()=>setPage(current+1)}>Next places</Button></nav>}
+  </div>;
+}
+function FindingExtras({ result, entity: originalEntity }) {
+  const [entity, setEntity] = useState(originalEntity);
+  const [detailError, setDetailError] = useState("");
+  const [advice, setAdvice] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController(); setLoading(true); setError(""); setAdvice(null); setEntity(originalEntity); setDetailError("");
+    (async () => {
+      let enriched = originalEntity;
+      try {
+        const response = await fetch(`/api/entities/details?id=${encodeURIComponent(originalEntity.id)}`, { signal: controller.signal });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Place details unavailable.");
+        enriched = { ...originalEntity, ...data.entity, affinity: originalEntity.affinity, popularity: originalEntity.popularity, explanation: originalEntity.explanation || data.entity.explanation };
+        if (!controller.signal.aborted) setEntity(enriched);
+      } catch (e) { if (!controller.signal.aborted) setDetailError(`Qloo detail refresh unavailable. Original place evidence is preserved. ${e.message}`); }
+      if (controller.signal.aborted) return;
+      const selected = { ...result, candidates: result.candidates.map(candidate => ({ ...candidate, entities: candidate.entities.filter(item=>item.id===originalEntity.id).map(()=>enriched) })) };
+      try { const data = await api("/findings/brief", { result: selected }, controller.signal); if (!controller.signal.aborted) setAdvice(data.advice); }
+      catch (e) { if (!controller.signal.aborted) setError(e.message); }
+      finally { if (!controller.signal.aborted) setLoading(false); }
+    })();
+    return ()=>controller.abort();
+  }, [originalEntity.id, result.id]);
+  const coordinate = entity.location ? `${entity.location.latitude},${entity.location.longitude}` : null;
+  const mapQuery = coordinate || [entity.name,entity.address,entity.geography].filter(Boolean).join(", ");
+  const mapUrl = coordinate || entity.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null;
+  return <section className="panel finding-overview">
+    <div className="finding-location"><div><span className="eyebrow">LOCATION & LINKS</span><h2>{entity.name}</h2><p>{entity.address || entity.geography || "Address not supplied by Qloo"}</p>{coordinate && <p>Coordinates: {coordinate}</p>}</div><MapPin size={34}/></div>
+    <div className="finding-links">{mapUrl && <a className="button primary" href={mapUrl} target="_blank" rel="noreferrer">Open Google Maps <ExternalLink size={16}/></a>}{entity.links?.map(link=><a className="button" key={link.url} href={link.url} target="_blank" rel="noreferrer">{readableLabel(link.label)} <ExternalLink size={14}/></a>)}{entity.website && !entity.links?.some(link=>link.url===entity.website) && <a className="button" href={entity.website} target="_blank" rel="noreferrer">Website <ExternalLink size={14}/></a>}</div>
+    <p className="field-hint">Map links use Qloo coordinates or the supplied address. They are not independently verified Google business listings. Social links appear only when supplied; missing links are not guessed.</p>
+    <details><summary>All available place information from Qloo</summary><pre>{JSON.stringify(entity.details || {},null,2)}</pre></details>
+    {detailError && <p role="status" className="field-hint">{detailError}</p>}
+    <div className="finding-facts">{Object.entries(entity.details || {}).filter(([key,value]) => ["phone", "telephone", "business_rating", "price_level", "hours", "hotel_class"].includes(key) && value !== null).map(([key,value])=><div key={key}><strong>{readableLabel(key)}</strong><span>{typeof value === "object" ? JSON.stringify(value) : String(value)}</span></div>)}</div>
+    <h3>AI-assisted visit brief</h3>
+    {loading && <p role="status"><LoaderCircle size={16} className="spin"/> We are fetching more details…</p>}
+    {error && <p role="alert">{error}</p>}
+    {advice?.status==="ready" && <><p>{advice.headline}</p><ul>{advice.findings?.map((finding,i)=><li key={i}>{finding.text}</li>)}</ul><h3>Check during your visit</h3><ul>{advice.nextSteps?.map(step=><li key={step}>{step}</li>)}</ul><p>AI interpretation of supplied information, not independently researched business facts.</p></>}
+    {advice && advice.status!=="ready" && <p>{advice.reason || "AI is not configured. Available Qloo information is shown above."}</p>}
+  </section>;
 }
