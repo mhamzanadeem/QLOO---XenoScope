@@ -22,37 +22,37 @@ export default function SignalChart({ rows, labels }) {
           layout="vertical"
           margin={{ left: 12, right: 25 }}
         >
-          <CartesianGrid stroke="#273149" horizontal={false} />
+          <CartesianGrid stroke="#e3e8e4" horizontal={false} />
           <XAxis
             type="number"
             allowDecimals={false}
-            tick={{ fill: "#9AA8C7", fontSize: 11 }}
+            tick={{ fill: "#66716c", fontSize: 11 }}
           />
           <YAxis
             type="category"
             dataKey="name"
             width={130}
-            tick={{ fill: "#c5d0e8", fontSize: 11 }}
+            tick={{ fill: "#49584f", fontSize: 11 }}
             tickLine={false}
             axisLine={false}
           />
           <Tooltip
             contentStyle={{
-              background: "#10172A",
-              border: "1px solid #34415c",
-              color: "#F4F7FF",
+              background: "#ffffff",
+              border: "1px solid #dce3dc",
+              color: "#1c2b24",
             }}
           />
           <Bar
             dataKey="a"
             name={labels[0]}
-            fill="#35D9FF"
+            fill="#245d4b"
             radius={[0, 3, 3, 0]}
           />
           <Bar
             dataKey="b"
             name={labels[1]}
-            fill="#8667FF"
+            fill="#bd7766"
             radius={[0, 3, 3, 0]}
           />
         </BarChart>
