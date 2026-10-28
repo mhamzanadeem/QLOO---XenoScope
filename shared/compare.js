@@ -1,3 +1,4 @@
+import { decisionBrief } from "./decision.js";
 export const normalizeId = (value) =>
   String(value ?? "")
     .trim()
@@ -11,6 +12,33 @@ export const uniqueById = (items) => [
 ];
 const finite = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+const safeWebsite = value => {
+  try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password ? url.href : null; } catch { return null; }
+};
+function placeLinks(entity) {
+  const found = [];
+  function visit(value, path, depth) {
+    if (depth > 4 || found.length >= 10) return;
+    if (typeof value === "string" && /website|instagram|facebook|twitter|tiktok|linkedin|url/i.test(path) && !/image|photo/i.test(path)) {
+      const url = safeWebsite(value);
+      if (url && !found.some(link => link.url === url)) found.push({ label: path.replace(/^properties\./, "").replaceAll("_", " ").slice(0, 100), url });
+    } else if (Array.isArray(value)) value.slice(0, 20).forEach(item => visit(item, path, depth + 1));
+    else if (value && typeof value === "object") Object.entries(value).forEach(([key, item]) => visit(item, path ? `${path}.${key}` : key, depth + 1));
+  }
+  visit({ properties: entity.properties, external: entity.external }, "", 0);
+  return found;
+}
+function placeLocation(entity) {
+  const point = entity.location || entity.properties?.location || entity.properties?.geocode;
+  const lat = point?.lat ?? point?.latitude; const lng = point?.lon ?? point?.lng ?? point?.longitude;
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { latitude: lat, longitude: lng } : null;
+}
+function placeAddress(entity) {
+  const address = entity.properties?.address ?? entity.properties?.formatted_address;
+  if (typeof address === "string") return address.slice(0, 1000);
+  if (address && typeof address === "object") return [address.street, address.city, address.state, address.postal_code, address.country].filter(item => typeof item === "string").join(", ").slice(0, 1000) || null;
+  return null;
+}
 /** Normalize Qloo entities without substituting zero for unavailable measures. */
 export function normalizeEntity(e) {
   return {
@@ -29,6 +57,12 @@ export function normalizeEntity(e) {
     affinity: finite(e.query?.affinity),
     popularity: finite(e.popularity),
     geography: e.properties?.geocode?.name ?? e.geography ?? null,
+    website: safeWebsite(e.properties?.website),
+    address: placeAddress(e),
+    explanation: e.query?.explainability ? JSON.stringify(e.query.explainability).slice(0, 20000) : null,
+    location: placeLocation(e),
+    links: placeLinks(e),
+    details: { ...(e.properties && typeof e.properties === "object" && !Array.isArray(e.properties) ? e.properties : {}), ...(e.external ? { external: e.external } : {}) },
   };
 }
 
@@ -115,6 +149,7 @@ export function buildReport(result) {
   return {
     ...result,
     analysis: compareCandidates(result.candidates),
+    decisionBrief: decisionBrief(result),
     methodology:
       "Deduplicate entities and tags by case-insensitive source ID. Count each tag once per entity. Align tag IDs across the two bounded result sets; subtract B count from A count. Missing metrics remain null. No market success ranking is computed.",
     limitations,
