@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     {
       name: "xenoscope-local-api",
       configureServer(server) {
-        Object.assign(process.env, loadEnv(mode, process.cwd(), "QLOO_"));
+        Object.assign(process.env, loadEnv(mode, process.cwd(), ["QLOO_", "OPENAI_"]));
         server.middlewares.use("/api", async (req, res) => {
           req.url = `/api${req.url}`;
           await handleRequest(req, res);
