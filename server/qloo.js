@@ -65,14 +65,16 @@ export async function qloo(
   try {
     response = await fetcher(url, {
       headers: { "X-Api-Key": env.QLOO_API_KEY, accept: "application/json" },
-      signal: AbortSignal.timeout(12000),
     });
   } catch (error) {
-    throw new ApiError(
-      error.name === "TimeoutError" || error.name === "AbortError" ? 504 : 502,
-      "QLOO_UNAVAILABLE",
-      "Qloo could not be reached within the request window. Please retry the connection.",
-    );
+    if (error.name === "TimeoutError" || error.name === "AbortError")
+      throw new ApiError(504, "QLOO_TIMEOUT", "The connection to Qloo was interrupted or timed out outside the application. Please retry.");
+    const networkCode = error.cause?.code || error.code;
+    if (["ENOTFOUND", "EAI_AGAIN"].includes(networkCode))
+      throw new ApiError(502, "QLOO_DNS", "The server cannot resolve the Qloo API hostname. Check QLOO_BASE_URL and the server's DNS or internet connection.");
+    if (["CERT_HAS_EXPIRED", "DEPTH_ZERO_SELF_SIGNED_CERT", "UNABLE_TO_VERIFY_LEAF_SIGNATURE", "SELF_SIGNED_CERT_IN_CHAIN"].includes(networkCode))
+      throw new ApiError(502, "QLOO_TLS", "The server could not verify Qloo's secure connection. Check the server clock, trusted certificates, or network proxy.");
+    throw new ApiError(502, "QLOO_UNAVAILABLE", "The server could not connect to Qloo. Check the server's internet connection, firewall, or proxy and retry.");
   }
   if (!response.ok) throw upstreamError(response.status);
   let data;
@@ -119,34 +121,48 @@ export function readEntities(data, search = false) {
       "MALFORMED_RESPONSE",
       "Qloo returned an unsupported entity response.",
     );
-  return uniqueById(rows.slice(0, 30).map(normalizeEntity));
+  return uniqueById(rows.map(normalizeEntity));
 }
 
-export async function liveComparison(request) {
+export async function liveComparison(request, { page = 1 } = {}) {
   const candidates = await Promise.all(
     request.candidates.map(async (candidate) => {
       // Same entity type and result limit on each side; no scores compared across queries.
-      const params = { "filter.type": "urn:entity:place", take: 20 };
+      const params = { "filter.type": "urn:entity:place", take: 50, page };
       if (request.mode === "venue")
         params["signal.interests.entities"] = candidate.entityId;
       else {
         params["filter.tags"] =
           request.mode === "concept" ? candidate.tagId : request.tagId;
-        params["filter.geocode.name"] =
+        params["filter.location.query"] =
           request.mode === "market" ? candidate.label : request.location;
       }
-      const data = await qloo("/v2/insights", params);
+      if (request.mode !== "venue") params["filter.location.radius"] = 0;
+      const references = request.referenceVenues?.length ? request.referenceVenues : request.referenceVenue ? [request.referenceVenue] : [];
+      if (references.length && request.mode === "market") {
+        params["signal.interests.entities"] = [...new Set(references.map(reference => reference.id))].join(",");
+        params["feature.explainability"] = true;
+      }
+      if (request.mode === "venue") params["feature.explainability"] = true;
+      const interestIds = request.mode === "market" && request.interests?.length ? [...new Set(request.interests.map(interest => interest.id))] : [params["filter.tags"]];
+      // Separate verified-interest queries provide explicit OR semantics without
+      // relying on an account-specific multi-filter operator.
+      const queries = interestIds.map(id => ({ ...params, ...(id ? { "filter.tags": id } : {}) }));
+      const responses = await Promise.all(queries.map(query => qloo("/v2/insights", query)));
+      const entities = uniqueById(responses.flatMap(data => readEntities(data)));
       return {
         label: candidate.label,
-        entities: readEntities(data),
+        entities,
+        hasMore: responses.some(data => (data.results?.entities?.length || 0) === 50),
         provenance: {
           provider: "Qloo",
           endpoint: "/v2/insights",
           retrievedAt: new Date().toISOString(),
           illustrative: false,
-          query: Object.fromEntries(
-            Object.entries(params).map(([k, v]) => [k, String(v)]),
-          ),
+          query: queries.length === 1 ? Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])) : {
+            strategy: "Separate interest queries; union by entity ID; 50 places per interest per page",
+            requests: JSON.stringify(queries),
+          },
         },
       };
     }),
@@ -156,6 +172,28 @@ export async function liveComparison(request) {
     createdAt: new Date().toISOString(),
     source: "live",
     request,
+    paging: { page, pageSizePerInterest: 50, hasMore: candidates.some(candidate => candidate.hasMore) },
     candidates,
   };
+}
+
+const detailCache = new Map();
+const detailPending = new Map();
+export async function placeDetails(id) {
+  const cached = detailCache.get(id);
+  if (cached && cached.expires > Date.now()) return cached.entity;
+  if (detailPending.has(id)) return detailPending.get(id);
+  const task = (async () => {
+    const data = await qloo("/entities", { entity_ids: id });
+    const rows = Array.isArray(data.results) ? data.results : data.results?.entities ?? data.entities;
+    if (!Array.isArray(rows)) throw new ApiError(502, "MALFORMED_RESPONSE", "Qloo returned an unsupported place detail response.");
+    const row = rows.find(entity => String(entity.entity_id ?? entity.id).toLowerCase() === id.toLowerCase());
+    if (!row) throw new ApiError(404, "PLACE_NOT_FOUND", "Qloo did not return details for this place.");
+    const entity = normalizeEntity(row);
+    if (detailCache.size >= 250) detailCache.clear();
+    detailCache.set(id, { entity, expires: Date.now() + 600000 });
+    return entity;
+  })();
+  detailPending.set(id, task);
+  try { return await task; } finally { detailPending.delete(id); }
 }
