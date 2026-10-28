@@ -30,10 +30,10 @@ test("live workflow supports evidence, persistence and export", async ({
     route.fulfill({ json: liveFixture(route.request().postDataJSON()) }),
   );
   await page.goto("/build/market");
-  await page.getByLabel("Verified cultural tag").fill("coffee");
-  await page.getByRole("button", { name: "Coffee Test tag" }).click();
+  await page.getByLabel("Cultural interest").fill("coffee");
+  await page.getByRole("button", { name: /^Coffee / }).click();
   await page.getByRole("button", { name: "Run comparison" }).click();
-  await expect(page.getByText("Where the patterns diverge")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare what matters" })).toBeVisible();
   await page
     .getByRole("link", { name: "Local craftsmanship", exact: true })
     .click();
@@ -96,10 +96,10 @@ test("comparison failure opens modal, preserves inputs and never offers demo fal
     });
   });
   await page.goto("/build/concept");
-  await page.getByLabel("Verified tag for concept A").fill("coffee");
-  await page.getByRole("button", { name: "Coffee Test tag" }).click();
-  await page.getByLabel("Verified tag for concept B").fill("books");
-  await page.getByRole("button", { name: "Books Test tag" }).click();
+  await page.getByLabel("Interest for concept A").fill("coffee");
+  await page.getByRole("button", { name: /^Coffee / }).click();
+  await page.getByLabel("Interest for concept B").fill("books");
+  await page.getByRole("button", { name: /^Books / }).click();
   await page.getByRole("button", { name: "Run comparison" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   expect(payload.source).toBe("live");

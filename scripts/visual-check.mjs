@@ -16,7 +16,7 @@ await page.goto("http://127.0.0.1:5173/build/market");
 await page.getByLabel("Verified cultural tag").fill("coffee");
 await page.getByRole("button", { name: /^Coffee/ }).first().click();
 await page.getByRole("button", { name: "Run comparison" }).click();
-await page.getByText("Where the patterns diverge").waitFor();
+await page.getByRole("heading", { name: "Compare what matters" }).waitFor();
 await page.waitForTimeout(800);
 await page.screenshot({
   path: "test-results/results-desktop.png",
