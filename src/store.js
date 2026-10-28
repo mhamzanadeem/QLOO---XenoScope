@@ -36,9 +36,7 @@ export async function api(path, payload, signal) {
       method: payload ? "POST" : "GET",
       headers: payload ? { "Content-Type": "application/json" } : {},
       body: payload ? JSON.stringify(payload) : undefined,
-      signal: typeof AbortSignal.timeout === "function" && typeof AbortSignal.any === "function"
-        ? (signal ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000))
-        : signal,
+      signal,
     });
   } catch (error) {
     if (error.name !== "AbortError")
@@ -59,7 +57,7 @@ export async function api(path, payload, signal) {
     );
   }
   if (!response.ok) {
-    if (response.status >= 500 || response.status === 429)
+    if ((response.status >= 500 && data.error?.code !== "QLOO_TIMEOUT") || response.status === 429)
       notifyUnavailable(
         data.error?.message || "Qloo is currently unavailable.",
       );
