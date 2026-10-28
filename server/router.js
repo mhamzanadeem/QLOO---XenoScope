@@ -1,7 +1,9 @@
+import { citySuggestions } from "./cities.js";
+import { investorAdvice } from "./ai.js";
 import { z } from "zod";
 import { requestSchema, resultSchema } from "../shared/schema.js";
 import { buildReport, toCSV } from "../shared/compare.js";
-import { ApiError, qloo, readEntities, liveComparison } from "./qloo.js";
+import { ApiError, qloo, readEntities, liveComparison, placeDetails } from "./qloo.js";
 
 import { researchComparison } from "./research.js";
 
@@ -23,8 +25,8 @@ function rateLimit(req) {
       "Too many requests. Please wait a minute.",
     );
 }
-async function body(req) {
-  if (Number(req.headers["content-length"] || 0) > 150000)
+async function body(req, maxBytes = 150000) {
+  if (Number(req.headers["content-length"] || 0) > maxBytes)
     throw new ApiError(413, "TOO_LARGE", "Request is too large.");
   if (!String(req.headers["content-type"] || "").includes("application/json"))
     throw new ApiError(415, "CONTENT_TYPE", "Send application/json.");
@@ -32,7 +34,7 @@ async function body(req) {
     if (
       Buffer.byteLength(
         typeof req.body === "string" ? req.body : JSON.stringify(req.body),
-      ) > 150000
+      ) > maxBytes
     )
       throw new ApiError(413, "TOO_LARGE", "Request is too large.");
     try {
@@ -48,7 +50,7 @@ async function body(req) {
   let raw = "";
   for await (const chunk of req) {
     raw += chunk;
-    if (Buffer.byteLength(raw) > 150000)
+    if (Buffer.byteLength(raw) > maxBytes)
       throw new ApiError(413, "TOO_LARGE", "Request is too large.");
   }
   try {
@@ -73,6 +75,7 @@ export async function handleRequest(req, res) {
     const get = (route) => path === route && req.method === "GET";
     let data;
     if (get("/api/health")) data = { status: "ok" };
+    else if (get("/api/cities/search")) data = { cities: citySuggestions(z.string().trim().min(1).max(100).parse(url.searchParams.get("q"))) };
     else if (get("/api/config"))
       data = {
         liveOnly: true,
@@ -101,6 +104,8 @@ export async function handleRequest(req, res) {
           true,
         ),
       };
+    } else if (get("/api/entities/details")) {
+      data = { source: "live", entity: await placeDetails(uuid.parse(url.searchParams.get("id"))), retrievedAt: new Date().toISOString() };
     } else if (get("/api/tags/search")) {
       const query = searchSchema.parse(url.searchParams.get("q"));
       const response = await qloo("/v2/tags", {
@@ -145,13 +150,15 @@ export async function handleRequest(req, res) {
           .max(200)
           .regex(/^urn:tag:[a-zA-Z0-9_:.-]+$/)
           .parse(tagId);
-      if (location)
-        params["filter.geocode.name"] = searchSchema.parse(location);
+      if (location) {
+        params["filter.location.query"] = searchSchema.parse(location);
+        params["filter.location.radius"] = 0;
+      }
       data = {
         source: "live",
         entities: readEntities(await qloo("/v2/insights", params)),
       };
-    } else if (["/api/compare", "/api/research"].includes(path) && req.method === "POST") {
+    } else if (["/api/compare", "/api/research", "/api/places/page"].includes(path) && req.method === "POST") {
       const input = await body(req);
       if (!input || typeof input !== "object" || Array.isArray(input)) throw new ApiError(400, "INVALID_INPUT", "Send a JSON object.");
       if (input.source && input.source !== "live")
@@ -161,8 +168,22 @@ export async function handleRequest(req, res) {
           "XenoScope uses live Qloo data only.",
         );
       const request = requestSchema.parse({ ...input, source: "live" });
-      data = path === "/api/research" ? await researchComparison(request) : await liveComparison(request);
-      data = resultSchema.parse(data);
+      if (path === "/api/places/page") {
+        data = await liveComparison(request, { page: z.number().int().min(1).max(1000).parse(input.page) });
+      } else {
+      data = path === "/api/research" || request.mode === "market"
+        ? await researchComparison(request)
+        : await liveComparison(request);
+      data.ai = await investorAdvice(data);
+      if (data.research) data.research.trace.push({
+        action: "Prepare investor brief",
+        detail: data.ai.status === "ready" ? "AI suggestions prepared with links to returned place evidence." : data.ai.status === "not-configured" ? "Deterministic evidence brief prepared; optional AI is not configured." : "Source evidence preserved; the optional AI brief was unavailable.",
+      });
+      }
+      const parsedResult = resultSchema.safeParse(data);
+      if (!parsedResult.success)
+        throw new ApiError(502, "INVALID_QLOO_RESULT", "Qloo returned data that could not be processed. Please try another query.");
+      data = parsedResult.data;
     } else if (get("/api/trends")) {
       const entityId = uuid.parse(url.searchParams.get("entityId"));
       const start = z.iso.date().parse(url.searchParams.get("start"));
@@ -185,8 +206,13 @@ export async function handleRequest(req, res) {
           take: 20,
         }),
       };
+    } else if (path === "/api/findings/brief" && req.method === "POST") {
+      const input = await body(req, 4000000);
+      const result = resultSchema.parse(input?.result);
+      data = { advice: await investorAdvice(result) };
     } else if (path === "/api/report" && req.method === "POST") {
-      const input = await body(req);
+      // Reports include the returned entity metadata, not just a small query.
+      const input = await body(req, 4000000);
       const format = z.enum(["json", "csv"]).parse(input?.format ?? "json");
       const result = resultSchema.parse(input?.result);
       if (result.source !== "live") throw new ApiError(400, "LIVE_ONLY", "Only Qloo explorations can be exported.");
@@ -203,15 +229,19 @@ export async function handleRequest(req, res) {
     } else {
       const known = [
         "/api/health",
+        "/api/cities/search",
         "/api/config",
         "/api/qloo/status",
         "/api/entities/search",
+        "/api/entities/details",
         "/api/tags/search",
         "/api/insights",
         "/api/compare",
+        "/api/places/page",
         "/api/research",
         "/api/trends",
         "/api/report",
+        "/api/findings/brief",
       ].includes(path);
       throw new ApiError(
         known ? 405 : 404,
@@ -230,7 +260,7 @@ export async function handleRequest(req, res) {
         error: {
           code: validation ? "INVALID_INPUT" : error.code || "REQUEST_FAILED",
           message: validation
-            ? error.issues.map((i) => i.message).join(" ")
+            ? [...new Set(error.issues.map((i) => i.message))].slice(0, 5).join(" ")
             : error.status
               ? error.message
               : "The request could not be completed. Please retry.",
