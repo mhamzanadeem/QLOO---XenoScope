@@ -1,139 +1,342 @@
 # XenoScope
 
-**See Beyond the Surface.** A decision-first workspace for exploring cultural signals across markets, venues, and business concepts. Built with React, Vite, Recharts, Lucide, Zod, and server-side JavaScript, prepared for a single Vercel deployment.
+**Research your next business location before you commit.**
 
-## What works
+XenoScope helps business owners compare cities, explore related places, inspect
+source evidence, and prepare a shortlist for further investigation. It combines
+live Qloo results with an optional, compact OpenAI investor brief.
 
-- Landing page with original local SVG identity and city-scanning artwork.
-- Market, venue, and concept exploration modes and guided comparison builders.
-- Live Qloo comparisons with verified tags, selected venues, and user-entered locations.
-- Side-by-side results, tag-count charts and accessible tables, category/search filters, sorting, and differences-only controls.
-- Finding pages with source IDs, underlying entity evidence, query metadata, and caveats.
-- Save, reopen, and delete explorations in this browser (up to 30; no account or cross-device sync).
-- Validated JSON/CSV downloads and print-friendly HTML reports for browser PDF printing.
-- Visible Qloo provenance, useful validation, request errors, empty states, and reduced-motion behavior.
+**Cultural relevance is not a measurement of demand, profitability, foot traffic,
+or the probability that a business will succeed.**
 
-Cultural affinity does **not** predict revenue, profitability, demand, foot traffic, or business success.
+## Guide for judges
 
-## Local setup
+### 1. Open the application
 
-Node.js 22.12+ (verified here with Node 24.18) and npm are required. Python is not required.
+Use the deployed application URL supplied in the Devpost submission. No hosted URL
+is recorded in this repository yet. The application does not require an account.
+The deployment owner configures provider keys on the server; judges should not need
+to supply keys when using the hosted demo.
 
-```sh
+To evaluate locally, follow **Run locally** below. A working Qloo key is required
+for live comparisons. OpenAI is optional. Missing provider access is reported
+explicitly; the application does not substitute fictional results.
+
+### 2. Choose a workflow
+
+On the homepage, click **Start exploring**. Select one of:
+
+| Workflow | Question it helps investigate |
+| --- | --- |
+| **City vs City** | What relevant places and documented features are returned in two cities? |
+| **Venue vs Venue** | What place recommendations relate to two selected reference venues? |
+| **Concept vs Concept** | What place samples match two verified interests in the same city? |
+
+City vs City is the main investor workflow. Its route remains `/build/market` for
+compatibility; `market` is an internal API mode, not another product feature.
+
+### 3. Try a City vs City scenario
+
+Above the form, open **Try a scenario**. Five editable examples are available:
+
+- Reading cafe for students.
+- Family restaurant.
+- Hotel for business travellers.
+- Neighborhood grocery shop.
+- Bookshop and stationery.
+
+Selecting a scenario fills the business description, audience, required features,
+and illustrative constraints. It also searches Qloo for up to three distinct
+place-related interests and three reference businesses. The form reports how many
+live matches were found. Fewer than three matches is a valid outcome; missing
+matches are not invented.
+
+**Both city fields intentionally remain blank.** Enter your own cities. Worldwide
+suggestions show state and country to distinguish names; manual entry is supported.
+Being listed in the city dataset does not guarantee Qloo coverage.
+
+A possible test brief is a reading cafe for students and remote workers, comparing
+Lahore and Islamabad. These names are an input example, not a promise of coverage,
+results, or a recommendation to invest in either city.
+
+### 4. Review the form
+
+| Field | What to enter or check |
+| --- | --- |
+| Business concept | A short description of the business, 2–100 characters |
+| Who is it for? | Your intended customers; this is a research assumption |
+| Required features | Up to 12 comma-separated requirements, such as Wi-Fi or reading space |
+| Decision | City vs City investigates which cities to research further; it does not select a property |
+| Constraints | Your budget, seating needs, hours, or other practical requirements |
+| City A / City B | Two different city names, optionally including state/country |
+| Reference businesses | Optional known examples whose style should guide recommendations |
+| Cultural interests | Select live search results; typing text alone is not a selection |
+
+Up to three reference businesses and three interests can be selected and removed.
+These are application request caps, not a claim that Qloo limits all integrations
+to three inputs. Multiple interests use **any-match / OR semantics**: each interest
+is queried separately in both cities, then duplicate places are combined. More
+interests broaden the sample; they do not guarantee more relevant results.
+
+Review automatically selected references. They are examples returned by search,
+not endorsements or businesses independently verified by XenoScope.
+
+### 5. Run the comparison
+
+Click **Run comparison**. The button displays request progress and elapsed time.
+City vs City automatically runs the bounded research workflow:
+
+1. Retrieve Qloo place results for both cities using the same interests/references.
+2. Assess how much returned place metadata is available.
+3. Search alternative interests if coverage is limited.
+4. Prepare deterministic requirement checks and an optional AI-assisted brief.
+
+The application imposes no request timeout and makes no automatic provider retries.
+Network, proxy, provider, and hosting limits can still terminate a request. The
+Vercel function is configured for 60 seconds; removing client timeouts cannot
+remove platform limits.
+
+### 6. Read the results
+
+The left **Results page outline** links to sections within the current report.
+On mobile it becomes compact section navigation.
+
+- **Overview:** a conditional next action, explicit requirement matches, and unknowns.
+- **City snapshots:** returned-place counts and available feature metadata.
+- **Places to investigate:** searchable place lists and links to findings.
+- **Compare what matters:** feature counts, charts, filtering, and sorting.
+- **Evidence table:** inspect the places supporting a particular feature count.
+- **AI brief:** shown when OpenAI produces a validated response.
+- **Research activity:** actual tool steps and optional AI outcome.
+- **Before you commit:** a temporary site-visit checklist; checks are not saved or verified.
+
+Requirement matching uses exact normalized feature names, ignoring punctuation.
+It is not a semantic verification that a business meets the complete concept.
+Unmatched requirements remain unverified; missing metadata does not prove absence.
+
+The AI brief is labeled as suggestions. Its citations must refer to places supplied
+to the model. Citation validation checks source membership, not the truth of every
+generated statement. Customer demand, rent, complete competitor counts, and financial
+feasibility remain unknown without additional evidence.
+
+### 7. Filter and paginate places
+
+Each Qloo Insights request asks for **50 places**, the documented maximum per page.
+With three interests, a city page can contain up to 150 places before deduplication.
+
+- Each city's visible list has 10-place pagination.
+- Search by place name, address, or city.
+- Filter by a returned feature, available location, or website.
+- Use **Load next Qloo page** to request another upstream page.
+- Use **Previous Qloo page** to return.
+
+Loading another Qloo page replaces the displayed sample. Counts and charts describe
+that page, not every business in the city. A full upstream page enables Next; the
+next page may be empty because total counts are not assumed. Pages load on demand,
+not through an automated citywide download.
+
+The feature table also has 10-row pagination. Its filters combine name search,
+category, shared/one-sided presence, minimum place count, minimum absolute count
+difference, and sorting. **Reset filters** restores the default view.
+
+### 8. Open a finding
+
+Click a place or a feature's evidence link.
+
+For a **place**, the app shows the existing evidence immediately, fetches additional
+Qloo entity information when opened, and then requests an optional AI visit brief.
+While enrichment is pending it shows **We are fetching more details…**.
+
+Available fields include description, address, coordinates, business website,
+returned social URLs, and other source properties. Phone, price level, rating,
+hours, or hotel class are shown when present. Expand **All available place
+information from Qloo** for the returned property/external metadata.
+
+**Open Google Maps** uses source coordinates or an address search. It is not an
+independently verified Google business listing. Instagram and other links are
+shown only when supplied as URLs; the app and LLM do not guess missing accounts.
+The AI interprets supplied information; it does not independently research new
+addresses, opening hours, reviews, or social profiles.
+
+For a **feature**, inspect which returned places carry it. Technical IDs and query
+provenance are expandable. `/guide` explains the terminology in plain English.
+Failed enrichment preserves the original evidence and displays a message.
+
+### 9. Save and export
+
+Use **Save exploration** to save the current result in this browser. Open **Saved
+explorations** to reopen or delete it. Saves are limited to 30 and are not synced.
+Browser storage can be cleared; export important work.
+
+Use **Export report** for JSON/CSV, or the print control for browser PDF printing.
+JSON preserves the business brief, source results, and derived decision evidence.
+CSV provides feature counts, methodology, and source provenance. Local results and
+exports are research artifacts, not authenticated certificates from Qloo.
+
+### Suggested judging checks
+
+1. Apply a scenario, enter two cities, review live selections, and run it.
+2. Follow an evidence link and check its supporting places and source details.
+3. Use filters, change table pages, and request another Qloo page if available.
+4. Open a place and observe on-demand details/AI loading.
+5. Save, reopen, and export the result.
+6. Try a query with no matches: the app should explain the empty sample, not invent results.
+
+A missing AI key should preserve Qloo results. A failed Qloo request must not be
+presented as a successful illustrative comparison.
+
+## Run locally
+
+Requirements: Node.js 22.12+ and npm. The project was checked with Node.js 24.18.
+No Python, separate database, or paid map API is required.
+
+```powershell
+cd C:\QLOO---XenoScope
 npm ci
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
+```
+
+Set these values in `.env.local` using your own credentials:
+
+```dotenv
+QLOO_API_KEY=your_key
+QLOO_BASE_URL=https://hackathon.api.qloo.com
+OPENAI_API_KEY=your_optional_openai_key
+OPENAI_MODEL=gpt-5.6-luna
+```
+
+Use the Qloo host assigned to your key. Allowed hosts are the official production,
+staging, and hackathon origins. Never put keys in a `VITE_` variable, frontend code,
+screenshots, Git, or a submission description.
+
+```powershell
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173`. The Vite development plugin serves the same API router used by Vercel. Qloo credentials are required. Choose **Start exploring**, select a mode, resolve tags or venues, and run a comparison. There is no demo switch or fallback. An accessible modal appears if Qloo is not configured, rejects access, rate limits requests, times out, or cannot be reached.
+Open the URL printed by Vite, usually `http://127.0.0.1:5173`. If that port is in use,
+Vite may choose another. The development plugin serves both frontend and API.
+Restart after changing environment variables.
 
-Required server configuration:
+`country-state-city` is included in the locked dependencies for worldwide city
+suggestions. Its dataset does not claim to contain every settlement.
 
-```sh
-cp .env.example .env.local
+```powershell
+npm run build
+npm run preview
 ```
 
-On PowerShell use `Copy-Item .env.example .env.local`. Set `QLOO_API_KEY` in `.env.local`, then restart the development server. `QLOO_BASE_URL` defaults to `https://api.qloo.com`; only Qloo's production, staging, and hackathon API origins are accepted. Keys are never sent to the frontend. Do not use a `VITE_` prefix for secrets.
+**Preview serves static assets only.** Use `npm run dev` for API-enabled local use.
 
-## Architecture and files
+## AI cost controls
+
+The optional OpenAI Responses integration uses `gpt-5.6-luna`, reasoning effort
+`none`, and a 700-output-token limit. It sends a compact selection of evidence,
+not the full Qloo response. There are no automatic retries, external AI tools,
+or larger-model fallback. Identical summaries are cached for ten minutes per
+process, up to 100 entries. Token usage is visible on successful briefs.
+
+Entity details are cached for ten minutes per process, up to 250 entries; concurrent
+identical detail requests share one lookup. Serverless instances do not share these
+caches. `store:false` disables Responses application storage, not all provider retention.
+
+## Architecture
 
 ```text
-api/index.js              Single Vercel Node function
-server/router.js          Shared HTTP router, validation, size and rate limits
-server/qloo.js            Qloo authentication, timeouts, normalization, live comparison
-shared/schema.js          Request and report schemas
-shared/compare.js         Deterministic matching, coverage, filtering, exports
-src/App.jsx               Seven main product views plus methodology
-src/SignalChart.jsx       Lazy-loaded Recharts visualization
-src/store.js              Browser-local saves and API/download helpers
-src/styles.css            Design tokens, responsive layout, focus and print styles
-public/brand/             Logo, icon, mark, and original city SVG artwork
-tests/                    Comparison, API, and React workflow tests
-e2e/                      Desktop and mobile browser workflows
-vercel.json               API and SPA routing, basic response headers
+api/index.js           Vercel entry point
+server/router.js       Validated same-origin API routes
+server/qloo.js         Live Qloo requests, paging, normalization and entity lookup
+server/research.js     Coverage assessment and conditional alternative search
+server/ai.js           Bounded, source-linked AI synthesis
+server/cities.js       Server-side worldwide city suggestions
+shared/schema.js       Request/result validation
+shared/compare.js      Counts, source normalization, report generation
+shared/decision.js     Deterministic investor brief and requirement matching
+src/App.jsx            Homepage, forms, results, findings, saves and reports
+src/CitySearch.jsx     City autocomplete
+src/scenarios.js       Editable input examples, not fictional results
+src/labels.js          Readable source labels
+src/SignalChart.jsx    Lazy-loaded chart
+src/store.js           Browser saves and API helpers
+src/styles.css         Light theme, responsive layout, print and focus styles
+tests/                 Unit/component tests and synthetic test-only fixtures
+e2e/                   Mocked-provider browser workflows
+.github/workflows/     Lint, unit tests and production build checks
 ```
 
-There is no production filesystem persistence, separate backend service, paid LLM, required paid map service, or database. Browser saves are local convenience storage and can be cleared by the browser. Export important work.
+## API routes
 
-## Live Qloo integration
-
-Implemented against the [official API overview](https://github.com/qloo/docs-public/blob/main/reference/api-overview.md), [Insights reference](https://github.com/qloo/docs-public/blob/main/reference/insights-api-deep-dive.md), [location guide](https://github.com/qloo/docs-public/blob/main/reference/insights-with-location-use-case.md), and [hackathon kit](https://github.com/qloo/qloo-hackathon-kit). Authentication uses the documented `X-Api-Key` header. All upstream calls originate on the server, with a 12-second timeout and no automatic retry amplification.
-
-| App route | Upstream route | Behavior |
+| Method | Route | Purpose |
 | --- | --- | --- |
-| `GET /api/health` | None | Minimal health response |
-| `GET /api/config` | None | Safe configured/capability flags |
-| `GET /api/qloo/status` | `/search` | Minimal authenticated accessibility probe |
-| `GET /api/entities/search?q=` | `/search` | Place search using `query`, `types`, bounded `take` |
-| `GET /api/tags/search?q=` | `/v2/tags` | Tag lookup using `filter.query` |
-| `GET /api/insights?entityId=&tagId=&location=` | `/v2/insights` | Allowlisted place recommendations |
-| `POST /api/compare` | `/v2/insights` | Two bounded result sets, then deterministic comparison |
-| `GET /api/trends?entityId=&start=&end=` | `/trends/entity` | Validated UUID and date range, source-labeled raw response |
-| `POST /api/report` | None | Validate result and recompute JSON/CSV report |
+| GET | `/api/health` | Server health |
+| GET | `/api/config` | Safe configuration flags |
+| GET | `/api/qloo/status` | Authenticated search-access check |
+| GET | `/api/cities/search?q=` | Worldwide city suggestions |
+| GET | `/api/entities/search?q=` | Place search |
+| GET | `/api/entities/details?id=` | On-demand entity details |
+| GET | `/api/tags/search?q=` | Live interest lookup |
+| GET | `/api/insights` | Validated place recommendations |
+| POST | `/api/compare` | Comparison; City vs City includes research |
+| POST | `/api/research` | Explicit bounded research workflow |
+| POST | `/api/places/page` | Another comparison-result page |
+| POST | `/api/findings/brief` | Optional AI analysis for an opened place |
+| GET | `/api/trends` | Validated, labeled raw trend response; no trend chart |
+| POST | `/api/report` | Validated JSON/CSV export |
 
-Live **market** mode requires selecting a verified tag; it applies the same tag and `filter.type=urn:entity:place` to both exact `filter.geocode.name` city filters. The free-text business concept is a research label; the selected tag is the actual API anchor. Qloo can reject unsupported tag/place combinations or return no results for a city. Live **concept** mode uses a separately selected verified tag for each concept and one shared exact city filter. Live **venue** mode requires selecting each venue from search and uses its ID as `signal.interests.entities` for place recommendations; these are surrounding recommendations, not the source venue's profile.
+## Checks and verification
 
-The configured hackathon host was checked successfully with real entity-search and tag-search requests. A Lahore/Islamabad insights comparison timed out within the request window; its error remains visible rather than producing substitute data. Response shape and error behavior are also covered with mocked upstream responses. Geographic coverage and tag compatibility can still vary.
-
-### Explicit capability limits
-
-- Live concept labels are explicitly anchored to selected Qloo tags. A label alone is never treated as a verified signal. Tag/place compatibility and account coverage may limit any mode.
-- Native `/v2/analysis/compare` was reviewed, but its undocumented response shape in the linked public reference is not interpreted. Our comparison is local set alignment, not a claim of native Qloo comparison output.
-- Demographic, heatmap, and financial fields are unavailable in the comparison; no synthetic replacement is displayed.
-- The trend API route preserves raw upstream data with provenance; no time-series chart is shown until a supported response model is verified.
-- Missing metrics remain `null`. Tag counts measure returned entity metadata, not citywide interest or prevalence. No cross-query affinity ranking or success score is computed.
-- Application comparisons reject demo requests. Older demo saves are excluded from the saved list; their stored data is not deleted. Connection failures show a modal with retry and close controls, preserving current inputs.
-
-## Checks
-
-```sh
+```powershell
 npm run lint
 npm test
 npm run build
 npx playwright install chromium
 npm run test:browser
-npm audit
 ```
 
-Unit and React tests cover normalization, deduplication, shared/differing tags, missing and incompatible measures, sorting/filtering, synthetic test responses, validation, missing key, upstream errors, exports, and the main page flow. Browser tests cover live-only comparisons, evidence, local persistence, exports, mobile connection dialogs, retry recovery, and upstream errors without fallback. Browser installation is only needed for browser QA. `npm run preview` previews static production assets only; use `npm run dev` or `vercel dev` for an API-enabled local app.
+Latest code checks: lint and production build passed; 43 tests passed. A full-suite
+UI timing failure occurred during development; the isolated UI suite and final
+full suite passed. Browser workflows use mocked providers and are separate from
+unit tests. Desktop/mobile static previews were inspected, including a findings
+preview with no horizontal overflow at 390px. This does not verify live providers.
 
-## Deploy to Vercel
+Successful hosted routing, current Qloo geographic/account coverage, and live
+OpenAI completion have not been verified in this execution environment. The user
+previously demonstrated a successful authenticated Qloo search; that does not
+establish every Insights/detail combination. No deployment was performed here.
 
-1. Push this repository to your Git provider and import it in Vercel.
-2. Use the Vite preset, Node.js 22+ runtime, install command `npm ci`, build command `npm run build`, and output `dist`.
-3. Set `QLOO_API_KEY` in Vercel environment variables for live mode. Without a key, the app shows the Qloo availability modal. The optional base URL is documented in `.env.example`.
-4. Deploy. `api/index.js` serves all `/api/*` routes through the rewrite's `route` query value; the SPA fallback preserves deep links. No always-running server is needed.
-5. Verify `/api/health`, `/api/config`, `/build/market`, and the Qloo availability modal. With credentials, verify tag search, venue search, and all three live comparison modes. A rejected live query must show an error rather than a demo success.
+## Deployment
 
-No deployment has been performed by this build. Vercel routing is prepared but needs verification in the deployed environment.
+Import the repository into Vercel. Use `npm ci`, `npm run build`, and output `dist`.
+Configure server keys there. `vercel.json` supplies API/SPA routing and headers.
+The Node function has a configured 60-second limit; confirm your plan supports it.
+Test deep links, all provider requests, findings, paging, exports, and mobile access
+on the deployed URL before submission. Keep judge access available during judging.
 
-## Security and operating notes
+## Limits and security
 
-Inputs and client-supplied report structures are validated; request bodies are capped at 150 KB. Upstream hosts and parameters are allowlisted. React renders text safely, CSV cells are quoted and guarded against formula injection, and exported filenames are fixed. Public config exposes only flags. Errors omit upstream bodies, credentials, and stack traces. Calls have bounded timeouts and no retries. Security headers are configured in `vercel.json`.
+- No commercial viability, demand, revenue, or success prediction.
+- City comparisons do not determine the best neighborhood or property.
+- Place samples and metadata can be incomplete; a missing feature is not absence.
+- No synthesized demographic, heatmap, or financial output. Trends are raw only.
+- Body limits: 150 KB for query requests; 4 MB for reports and finding briefs.
+- Inputs, hostnames, result structures, and clickable URLs are validated.
+- React renders source text safely; CSV cells are guarded against formula injection.
+- Public configuration omits secrets. Provider errors omit raw bodies and credentials.
+- Rate limiting is per-instance and best-effort; production needs platform abuse controls.
+- Public endpoints can consume provider quota; use appropriate deployment usage limits.
+- Saved/exported content is client supplied and is not cryptographically authenticated.
 
-The per-instance rate limit (90 requests/minute, bounded map) is best-effort, not durable or globally enforced. Configure Vercel WAF/rate limiting and usage controls for public production traffic. No CORS grant is needed because the frontend and API are same-origin. Reports validate structure but cannot cryptographically authenticate client-provided evidence; locally saved/exported results are research artifacts, not signed source certificates. No personal information is collected. External font loading has system fallbacks.
+## Repository scope and license
 
-## Research workflow
+Keep source, build/deploy configuration, public assets, tests, README, and LICENSE
+in Git. `.gitignore` excludes credentials, dependencies, generated output, local
+commit helpers, retired demo datasets/generators, and old planning documents.
+Synthetic data under `tests/fixtures` is used only for automated verification.
+Application requests and result schemas accept live Qloo data only.
 
-Select **Investigate coverage and suggest a next step** in any comparison form.
-`POST /api/research` accepts the same request as `/api/compare`. It retrieves two
-result sets, checks metadata coverage, and searches for up to five alternative
-tags when either sample has fewer than three tagged places (non-venue modes).
-The workflow makes at most three upstream calls, does not silently replace the
-selected anchors, and presents its activity and evidence in a research brief.
-It is a deterministic, bounded workflow, not an LLM planner or a cross-domain
-recommendation engine. The coverage threshold is not a statistical confidence
-measure. Research briefs are preserved in saved results and JSON exports.
+Application source is MIT licensed; see [LICENSE](LICENSE). Dependencies and Qloo
+content remain subject to their respective terms.
 
-## License
-
-Application source is MIT licensed; see LICENSE. Third-party dependencies and
-Qloo data remain subject to their respective licenses and API terms.
-
-## Repository scope
-
-Runtime source, brand assets, build/deploy configuration, the license, and automated
-tests belong in Git. Synthetic responses live only in `tests/fixtures`; no live API
-key is required for unit tests. Application schemas accept live results only.
-Retired demo datasets, their generator, one-time asset generation, old build prompts,
-local verification history, and commit helper scripts are ignored local archives.
-`test-results`, dependencies, generated builds, and secrets are also ignored.
+Official references: [Qloo Insights](https://github.com/qloo/docs-public/blob/main/reference/insights-api-deep-dive.md),
+[entity lookup](https://github.com/qloo/docs-public/blob/main/reference/get-entities.md),
+[hackathon submission guide](https://github.com/qloo/qloo-hackathon-kit/blob/main/docs/SUBMISSION.md),
+and [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
