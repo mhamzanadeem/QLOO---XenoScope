@@ -93,3 +93,13 @@ describe("comparison engine", () => {
     expect(resultSchema.safeParse(result).success).toBe(false);
   });
 });
+
+it("retains detailed source properties and rejects unsafe external links", () => {
+  const entity = normalizeEntity({ entity_id: "detail-test", name: "Place", properties: { address: { street: "Road 1", city: "Islamabad" }, website: "javascript:alert(1)", phone: "123", social: { instagram: { url: "https://instagram.com/example" } } }, location: { lat: 33.7, lon: 73.1 } });
+  expect(entity.website).toBeNull();
+  expect(entity.address).toBe("Road 1, Islamabad");
+  expect(entity.location.longitude).toBe(73.1);
+  expect(entity.details.phone).toBe("123");
+  expect(entity.links.some(link => link.url.startsWith("javascript:"))).toBe(false);
+  expect(entity.links[0].url).toBe("https://instagram.com/example");
+});
