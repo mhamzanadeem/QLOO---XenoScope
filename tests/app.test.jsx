@@ -148,7 +148,7 @@ it("shows no-results guidance instead of a completed comparison for empty respon
   fireEvent.click(screen.getByRole("button", { name: "Run comparison" }));
   expect(await screen.findByRole("heading", { name: "No places matched this comparison" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Compare what matters" })).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Edit comparison" })).toHaveAttribute("href", "/build/market?edit=1");
+  expect(screen.getByRole("link", { name: "Edit comparison" })).toHaveAttribute("href", expect.stringContaining("/build/market?edit=1"));
 });
 
 it("paginates ten signals and resets pagination when custom filters change", async () => {
@@ -221,7 +221,12 @@ it("fetches a place refresh and AI brief only when its finding is opened", async
   fireEvent.click(screen.getByRole("button", { name: "Run comparison" }));
   await screen.findByRole("heading", { name: "Compare what matters" });
   expect(fetch.mock.calls.some(([url]) => url === "/api/findings/brief")).toBe(false);
-  fireEvent.click(screen.getAllByRole("link", { name: /^Copper & Paper/ }).find(link => link.classList.contains("entity-row")));
+  const findingLink = screen.getAllByRole("link", { name: /^Copper & Paper/ }).find(link => link.classList.contains("entity-row"));
+  expect(findingLink).toHaveAttribute("target", "_blank");
+  const destination = findingLink.getAttribute("href");
+  fireEvent.click(findingLink);
+  cleanup();
+  render(<MemoryRouter initialEntries={[destination]}><App /></MemoryRouter>);
   await screen.findByText("Road 1, Lahore");
   expect(screen.getByText(/We are fetching more details/)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Open Google Maps/ }).getAttribute("href")).toContain("31.5%2C74.3");

@@ -1,12 +1,15 @@
+import ResearchAssistant from "./ResearchAssistant.jsx";
+import Link, { ResultNavigationContext } from "./AppLink.jsx";
+import { compactAIResult, requestAI } from "./aiRequest.js";
 import CitySearch from "./CitySearch.jsx";
 import { cityScenarios } from "./scenarios.js";
 import { decisionBrief } from "../shared/decision.js";
 import { readableLabel, featureCategory } from "./labels.js";
 import { lazy, Suspense, useEffect, useMemo, useState, useId } from "react";
 import {
+  Navigate,
   Routes,
   Route,
-  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -43,7 +46,7 @@ import {
   questions,
 } from "../shared/compare.js";
 import QlooModal from "./QlooModal.jsx";
-import { api, readSaved, saveResult, deleteSaved, download } from "./store.js";
+import { api, readSaved, saveResult, deleteSaved, download, cacheNavigationResult, readNavigationResult } from "./store.js";
 const SignalChart = lazy(() => import("./SignalChart.jsx"));
 const modes = [
   {
@@ -95,7 +98,8 @@ function Notice({ children, error = false }) {
 }
 
 export default function App() {
-  const [result, setResult] = useState(null);
+  const location = useLocation();
+  const [result, setResult] = useState(() => readNavigationResult(new URLSearchParams(location.search).get("exploration")));
   const [config, setConfig] = useState(null);
   const [configError, setConfigError] = useState("");
   const [unavailable, setUnavailable] = useState("");
@@ -111,7 +115,7 @@ export default function App() {
       setRetrying(false);
     }
   }
-  const location = useLocation();
+  useEffect(() => { if (result) cacheNavigationResult(result); }, [result]);
   useEffect(() => {
     const handleUnavailable = (event) => setUnavailable(event.detail.message);
     window.addEventListener("qloo-unavailable", handleUnavailable);
@@ -128,7 +132,7 @@ export default function App() {
   const landing = location.pathname === "/";
   const context = { result, setResult, config };
   return (
-    <div className={landing ? "app landing-app" : "app workspace-app"}>
+    <ResultNavigationContext.Provider value={result}><div className={landing ? "app landing-app" : "app workspace-app"}>
       <QlooModal
         message={unavailable}
         retrying={retrying}
@@ -144,11 +148,11 @@ export default function App() {
             <img src="/brand/xenoscope-logo.svg" alt="XenoScope" width="172" />
           </Link>
           <div>
-            <Link to="/explore">Compare</Link>
+            <Link to="/build/market">Compare</Link>
             <Link to="/methodology">Methodology</Link>
             <Link to="/saved">Saved explorations</Link>
           </div>
-          <Link to="/explore" className="button small">
+          <Link to="/build/market" className="button small">
             Compare cities <ArrowUpRight size={15} />
           </Link>
         </nav>
@@ -172,7 +176,7 @@ export default function App() {
           )}
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/explore" element={<Explore />} />
+            <Route path="/explore" element={<Navigate to="/build/market" replace />} />
             <Route path="/build/:mode" element={<Builder {...context} />} />
             <Route path="/results" element={<Results {...context} />} />
             <Route path="/findings/:id" element={<Finding result={result} />} />
@@ -197,7 +201,7 @@ export default function App() {
           </footer>
         )}
       </div>
-    </div>
+    </div></ResultNavigationContext.Provider>
   );
 }
 
@@ -209,7 +213,7 @@ function Landing() {
           <p className="eyebrow">FOR YOUR NEXT BUSINESS MOVE</p>
           <h1>Before you sign.<br /><em>Know what to investigate.</em></h1>
           <p>Compare cities, explore relevant places, and turn your business idea into an evidence-backed research shortlist.</p>
-          <Link className="button primary" to="/explore">Start exploring <ArrowRight size={17} /></Link>
+          <Link className="button primary" to="/build/market">Start exploring <ArrowRight size={17} /></Link>
           <a className="home-secondary" href="#what-you-get">See what you get <ArrowRight size={15} /></a>
           <div className="home-audience">Opening a café, restaurant, hotel, or shop?</div>
         </div>
@@ -239,27 +243,9 @@ function Landing() {
         <ul><li><Check size={18} /><span>Place-linked evidence</span></li><li><Check size={18} /><span>Your requirements, checked against available details</span></li><li><Check size={18} /><span>AI-assisted suggestions when available</span></li><li><Check size={18} /><span>Unknowns and practical next steps</span></li></ul>
         <Link className="text-link" to="/methodology">How the research works <ArrowUpRight size={16} /></Link>
       </section>
-      <section className="home-final-cta"><div><span className="eyebrow">BRING YOUR IDEA</span><h2>Leave with a plan to investigate.</h2><p>Choose a scenario or build your own brief.</p></div><Link className="button primary" to="/explore">Start your research <ArrowRight size={17} /></Link></section>
+      <section className="home-final-cta"><div><span className="eyebrow">BRING YOUR IDEA</span><h2>Leave with a plan to investigate.</h2><p>Choose a scenario or build your own brief.</p></div><Link className="button primary" to="/build/market">Start your research <ArrowRight size={17} /></Link></section>
       <footer className="home-footer"><Link to="/" className="home-wordmark">XenoScope</Link><p>Cultural evidence informs research. It does not predict demand or business success.</p><div><Link to="/guide">Reading the results</Link><Link to="/methodology">Sources & limitations</Link><Link to="/saved">Saved research</Link></div></footer>
     </div>
-  );
-}
-
-function Explore() {
-  return (
-    <>
-      <Title title="What would you like to compare?" />
-      <div className="mode-grid">
-        {modes.map(({ id, icon: Icon, name, description }) => (
-          <Link className="mode-card" key={id} to={`/build/${id}`}>
-            <div className="icon-box"><Icon size={28} /></div>
-            <h2>{name}</h2>
-            <p>{description}</p>
-            <span className="text-link">Compare <ArrowRight size={17} /></span>
-          </Link>
-        ))}
-      </div>
-    </>
   );
 }
 
@@ -505,7 +491,7 @@ function Builder({ setResult, result }) {
   }
   return (
     <div className="builder-page">
-      <Link to="/explore" className="back-link"><ChevronLeft size={16} /> Comparison types</Link>
+      <Link to="/" className="back-link"><ChevronLeft size={16} /> Back to home</Link>
       {mode === "market" && <section className="scenario-picker">
         <label htmlFor="city-scenario">Try a scenario</label>
         <select id="city-scenario" value={scenarioId} disabled={loading} onChange={e => applyScenario(e.target.value)}>
@@ -725,14 +711,14 @@ function Empty({
       </div>
       <h1>{title}</h1>
       <p>{text}</p>
-      <Link to="/explore" className="button primary">
+      <Link to="/build/market" className="button primary">
         Start exploring <ArrowRight size={16} />
       </Link>
     </div>
   );
 }
 
-export function Results({ result, setResult }) {
+export function Results({ result, setResult, config }) {
   const [pageLoading, setPageLoading] = useState(false);
   const [pageError, setPageError] = useState("");
   async function loadQlooPage(page) {
@@ -837,10 +823,11 @@ export function Results({ result, setResult }) {
       <p className="comparison-received" role="status">{result.candidates.some(candidate => candidate.entities.length === 0) ? "Qloo returned results for only one option. This comparison has incomplete coverage." : "Qloo response received. Your comparison is ready."}</p>
 
       <section id="decision" className="panel decision-brief">
-        <div className="decision-heading"><span className="recommendation-icon"><Compass size={24} /></span><div><span className="eyebrow">YOUR RESEARCH SHORTLIST</span><h2>Your next decision</h2></div></div>
+        <div className="decision-heading"><span className="recommendation-icon"><Compass size={24} /></span><div><span className="eyebrow">YOUR RESEARCH SHORTLIST</span><h2>Your next move</h2></div></div>
         <p className="decision-recommendation">{recommendation.recommendation}</p>
-        <p>This is a research suggestion based on returned places, not a demand forecast.</p>
-        {result.request.brief?.audience && <p><strong>Intended audience:</strong> {result.request.brief.audience} (your brief; not independently verified).</p>}
+        <div className="outcome-badges"><span className="badge teal">Qloo evidence</span><span className="badge">Site visits next</span><span className="badge">Demand unverified</span></div>
+        <div className="outcome-snapshots">{recommendation.cityEvidence.map(city => <article key={city.label}><span className="eyebrow">{city.label}</span><strong>{city.sampleSize}<small>returned places</small></strong><span>{recommendation.requirements.length ? `${city.documentedRequirements} / ${recommendation.requirements.length} requested features documented` : "Add requirements to check feature matches"}</span><div className="outcome-badges">{city.shortlist.slice(0, 2).map(place => <Link key={place.id} className="badge" to={`/findings/${encodeURIComponent(place.id)}`}>{place.name} ↗</Link>)}</div></article>)}</div>
+        {result.request.brief?.audience && <p className="field-hint">Your target audience: {result.request.brief.audience} · supplied in your brief.</p>}
         <details className="brief-details"><summary>How your requirements compare</summary>
         {recommendation.requirements.length ? recommendation.requirements.map(row => <div className="requirement-row" key={row.feature}>
           <strong>{row.feature}</strong>
@@ -859,27 +846,29 @@ export function Results({ result, setResult }) {
           </article>)}
           <details><summary>Common features in this sample</summary><ul>{city.commonFeatures.map(feature => <li key={feature.id}><Link to={`/findings/${encodeURIComponent(feature.id)}`}>{feature.name}</Link>: {feature.count} returned places</li>)}</ul></details>
         </section>)}</div>
-        </details><h3>Suggested next steps</h3><ol>{recommendation.nextSteps.map(step => <li key={step}>{step}</li>)}</ol>
+        </details><h3>Your action plan</h3><div className="outcome-actions">{recommendation.nextSteps.slice(0, 3).map((step, i) => <article key={step}><span className="outcome-step">0{i + 1}</span><strong>{["Talk to customers", "Visit the shortlist", "Check the costs"][i]}</strong><p>{step}</p></article>)}</div>
         <details><summary>What remains unknown</summary><ul>{recommendation.unknowns.map(item => <li key={item}>{item}</li>)}</ul></details>
       </section>
 
       {result.ai?.status === "ready" && <section id="ai-brief" className="panel decision-brief">
-        <h2>AI-assisted investor brief</h2><p className="decision-recommendation">{result.ai.headline}</p>
+        <h2>Insights to act on</h2><p className="decision-recommendation">{result.ai.headline}</p>
         <p>Suggestions based on a small selection of returned Qloo places. Verify before committing.</p>
         <ul>{result.ai.findings?.map((finding, i) => <li key={i}>{finding.text}<div>{finding.evidenceIds.map(id => <Link className="evidence-link" key={id} to={`/findings/${encodeURIComponent(id)}`}>{result.candidates.flatMap(c => c.entities).find(e => e.id === id)?.name || "Inspect evidence"}</Link>)}</div></li>)}</ul>
-        <h3>Risks and missing information</h3><ul>{result.ai.risks?.map(risk => <li key={risk}>{risk}</li>)}</ul>
+        <details><summary>Risks and missing information</summary><ul>{result.ai.risks?.map(risk => <li key={risk}>{risk}</li>)}</ul></details>
         <h3>Suggested actions</h3><ol>{result.ai.nextSteps?.map(step => <li key={step}>{step}</li>)}</ol>
         <details><summary>AI usage</summary><p>{result.ai.model} · {result.ai.inputTokens} input tokens · {result.ai.outputTokens} output tokens {result.ai.cached ? "· reused cached brief; no new AI call" : "· one AI call"}</p></details>
       </section>}
       {result.ai?.status === "unavailable" && <Notice>AI summary unavailable: {result.ai.reason} The source evidence below is still available.</Notice>}
       {result?.research && <section id="research-activity" className="panel research-brief">
         <h2>Research activity</h2>
-        <p>{result.research.nextStep}</p>
+        <div className="outcome-badges">{result.research.trace.map((step, i) => <span className="badge" key={i}>{step.action}</span>)}</div>
         {result.research.evidence.map(e => <p key={e.id}><Link to={`/findings/${encodeURIComponent(e.id)}`}>{e.name}</Link> ({e.counts.join(" / ")} returned places)</p>)}
-        <details><summary>See research tool activity</summary><ol>{result.research.trace.map(t => <li key={t.action}><strong>{t.action}</strong>: {t.detail}</li>)}</ol>
+        <details><summary>See research tool activity</summary><p>{result.research.nextStep}</p><ol>{result.research.trace.map(t => <li key={t.action}><strong>{t.action}</strong>: {t.detail}</li>)}</ol>
         {result.research.alternatives.length > 0 && <p>Alternative interests: {result.research.alternatives.map(t => t.name).join(", ")}</p>}
         <p>{result.research.caveat}</p></details>
       </section>}
+
+      <ResearchAssistant key={result.id} result={result} configured={config?.assistantConfigured} />
 
       <div id="cities" className="comparison-candidates">
         {result.candidates.map((candidate, i) => (
@@ -1503,7 +1492,7 @@ function Report({ result }) {
         </p>
       </section>
       {!result && (
-        <Link className="button primary no-print" to="/explore">
+        <Link className="button primary no-print" to="/build/market">
           Explore with the evidence in view <ArrowRight size={16} />
         </Link>
       )}
@@ -1532,7 +1521,7 @@ function TagGuide() {
 
 function ResultsOutline({ hasAI, hasResearch }) {
   const [active, setActive] = useState("decision");
-  const sections = [["decision", "Overview"], ["cities", "City snapshots"], ["places", "Places to investigate"], ["comparison", "Compare what matters"], ["evidence", "Evidence table"], ...(hasAI ? [["ai-brief", "AI brief"]] : []), ...(hasResearch ? [["research-activity", "Research activity"]] : []), ["site-checks", "Before you commit"]];
+  const sections = [["decision", "Overview"], ["research-assistant", "Discuss results"], ["cities", "City snapshots"], ["places", "Places to investigate"], ["comparison", "Compare what matters"], ["evidence", "Evidence table"], ...(hasAI ? [["ai-brief", "AI brief"]] : []), ...(hasResearch ? [["research-activity", "Research activity"]] : []), ["site-checks", "Before you commit"]];
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(entries => {
@@ -1583,6 +1572,7 @@ function FindingExtras({ result, entity: originalEntity }) {
   const [advice, setAdvice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController(); setLoading(true); setError(""); setAdvice(null); setEntity(originalEntity); setDetailError("");
     (async () => {
@@ -1596,12 +1586,12 @@ function FindingExtras({ result, entity: originalEntity }) {
       } catch (e) { if (!controller.signal.aborted) setDetailError(`Qloo detail refresh unavailable. Original place evidence is preserved. ${e.message}`); }
       if (controller.signal.aborted) return;
       const selected = { ...result, candidates: result.candidates.map(candidate => ({ ...candidate, entities: candidate.entities.filter(item=>item.id===originalEntity.id).map(()=>enriched) })) };
-      try { const data = await api("/findings/brief", { result: selected }, controller.signal); if (!controller.signal.aborted) setAdvice(data.advice); }
+      try { const data = await requestAI("/findings/brief", { result: compactAIResult(selected) }, controller.signal); if (!controller.signal.aborted) setAdvice(data.advice); }
       catch (e) { if (!controller.signal.aborted) setError(e.message); }
       finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return ()=>controller.abort();
-  }, [originalEntity.id, result.id]);
+  }, [originalEntity.id, result.id, retry]);
   const coordinate = entity.location ? `${entity.location.latitude},${entity.location.longitude}` : null;
   const mapQuery = coordinate || [entity.name,entity.address,entity.geography].filter(Boolean).join(", ");
   const mapUrl = coordinate || entity.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}` : null;
@@ -1617,5 +1607,6 @@ function FindingExtras({ result, entity: originalEntity }) {
     {error && <p role="alert">{error}</p>}
     {advice?.status==="ready" && <><p>{advice.headline}</p><ul>{advice.findings?.map((finding,i)=><li key={i}>{finding.text}</li>)}</ul><h3>Check during your visit</h3><ul>{advice.nextSteps?.map(step=><li key={step}>{step}</li>)}</ul><p>AI interpretation of supplied information, not independently researched business facts.</p></>}
     {advice && advice.status!=="ready" && <p>{advice.reason || "AI is not configured. Available Qloo information is shown above."}</p>}
+    {!loading && (error || advice?.status === "unavailable") && <Button onClick={() => setRetry(value => value + 1)}>Retry visit brief</Button>}
   </section>;
 }
