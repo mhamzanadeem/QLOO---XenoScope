@@ -1,20 +1,91 @@
+<div align="center">
+
 # XenoScope
 
-**Research your next business location before you commit.**
+### Before you sign. Know what to investigate.
 
-XenoScope helps business owners compare cities, explore related places, inspect
-source evidence, and prepare a shortlist for further investigation. It combines
-live Qloo results with an optional, compact OpenAI investor brief.
+Evidence-linked location research for your next business idea.
 
-**Cultural relevance is not a measurement of demand, profitability, foot traffic,
-or the probability that a business will succeed.**
+<p>
+  <a href="https://xenoscope.vercel.app/"><img src="https://img.shields.io/badge/Live_demo-Visit_XenoScope-245d4b?style=for-the-badge&amp;logo=vercel&amp;logoColor=white" alt="Visit the live XenoScope application" /></a>
+  <a href="#run-locally"><img src="https://img.shields.io/badge/Get_started-Run_locally-d55c36?style=for-the-badge" alt="Run XenoScope locally" /></a>
+</p>
+
+<p>
+  <a href="https://github.com/mhamzanadeem/QLOO---XenoScope/stargazers"><img src="https://img.shields.io/github/stars/mhamzanadeem/QLOO---XenoScope?style=flat-square&amp;color=245d4b" alt="GitHub stars" /></a>
+  <a href="https://github.com/mhamzanadeem/QLOO---XenoScope/forks"><img src="https://img.shields.io/github/forks/mhamzanadeem/QLOO---XenoScope?style=flat-square&amp;color=245d4b" alt="GitHub forks" /></a>
+  <a href="https://github.com/mhamzanadeem/QLOO---XenoScope/actions/workflows/checks.yml"><img src="https://github.com/mhamzanadeem/QLOO---XenoScope/actions/workflows/checks.yml/badge.svg?branch=main" alt="Application checks on main" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/mhamzanadeem/QLOO---XenoScope?style=flat-square&amp;color=245d4b" alt="MIT license" /></a>
+  <img src="https://hits.sh/github.com/mhamzanadeem/QLOO---XenoScope.svg?label=README%20views&amp;color=245d4b" alt="README badge views tracked by hits.sh, not website visits" />
+</p>
+
+[Live demo](https://xenoscope.vercel.app/) · [Run locally](#run-locally) · [How it works](#how-it-works) · [Guide for judges](#guide-for-judges) · [Architecture](#architecture)
+
+<a href="https://xenoscope.vercel.app/">
+  <img src="docs/assets/readme-hero.png" alt="XenoScope — Before you sign. Know what to investigate. Evidence-linked city research." width="100%" />
+</a>
+
+<p>
+  <img src="https://img.shields.io/badge/React-19-20232a?style=flat-square&amp;logo=react&amp;logoColor=61dafb" alt="React 19" />
+  <img src="https://img.shields.io/badge/Vite-7-646cff?style=flat-square&amp;logo=vite&amp;logoColor=white" alt="Vite 7" />
+  <img src="https://img.shields.io/badge/Node.js-22.12%2B-417e38?style=flat-square&amp;logo=nodedotjs&amp;logoColor=white" alt="Node.js 22.12 or newer" />
+  <img src="https://img.shields.io/badge/Powered_by-Qloo-245d4b?style=flat-square" alt="Powered by Qloo" />
+  <img src="https://img.shields.io/badge/AI-OpenAI-171717?style=flat-square" alt="Optional OpenAI integration" />
+</p>
+
+</div>
+
+## A clearer next step for business owners
+
+XenoScope helps you compare cities, explore culturally relevant places, and build
+an evidence-linked research shortlist before committing to a location. Start with
+your concept, audience, and requirements; investigate what Qloo returns; then ask
+the research assistant to help you explore further.
+
+| | What you can do |
+| --- | --- |
+| 📍 **Compare locations** | Review two cities using the same selected interests and reference businesses. |
+| 🔎 **Inspect the evidence** | Open returned places, inspect documented features, and follow available source links. |
+| 💬 **Discuss your results** | Ask follow-up questions with your brief and comparison in context; let the assistant choose relevant Qloo research tools. |
+| 🧭 **Plan your next move** | Build a visit shortlist, identify unknowns, and use a practical site-visit checklist. |
+| 📁 **Keep your research** | Save explorations in your browser and export JSON or CSV reports. |
+
+> Cultural relevance informs research. It does not establish customer demand,
+> profitability, foot traffic, or business success.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Your business brief] --> B[Qloo place results]
+    B --> C[Coverage and requirement checks]
+    C --> D[Evidence-linked shortlist]
+    D --> E[Your follow-up question]
+    E --> F{More evidence needed?}
+    F -->|Yes| G[Inspect places or investigate interests]
+    G --> H[Concise answer with sources]
+    F -->|No| H
+```
+
+The initial comparison follows a bounded research workflow. The optional assistant
+can choose tools for fresh Qloo research, then use their returned evidence in its
+answer. Follow-up samples are labelled separately from your original comparison.
+
+**Try it:** [Open City vs City](https://xenoscope.vercel.app/build/market), choose
+an example brief, enter two cities, and select verified interests. Run the
+comparison, inspect a place, then ask **“What should I investigate next?”**
+
+---
 
 ## Guide for judges
 
+<details>
+<summary><strong>Open the complete walkthrough: scenarios, evidence, findings, and exports</strong></summary>
+
 ### 1. Open the application
 
-Use the deployed application URL supplied in the Devpost submission. No hosted URL
-is recorded in this repository yet. The application does not require an account.
+Open **[xenoscope.vercel.app](https://xenoscope.vercel.app/)**. The application
+does not require an account.
 The deployment owner configures provider keys on the server; judges should not need
 to supply keys when using the hosted demo.
 
@@ -24,7 +95,9 @@ explicitly; the application does not substitute fictional results.
 
 ### 2. Choose a workflow
 
-On the homepage, click **Start exploring**. Select one of:
+On the homepage, click **Start exploring** to go directly to **City vs City**
+(`/build/market`). Old `/explore` links redirect there. Other workflows remain
+available from the homepage cards:
 
 | Workflow | Question it helps investigate |
 | --- | --- |
@@ -91,7 +164,9 @@ City vs City automatically runs the bounded research workflow:
 3. Search alternative interests if coverage is limited.
 4. Prepare deterministic requirement checks and an optional AI-assisted brief.
 
-The application imposes no request timeout and makes no automatic provider retries.
+Comparison requests impose no application timeout and make no automatic provider retries.
+The interactive assistant has a separate 50-second total budget, at most three Qloo
+tool calls and four AI calls per question, and no automatic retries.
 Network, proxy, provider, and hosting limits can still terminate a request. The
 Vercel function is configured for 60 seconds; removing client timeouts cannot
 remove platform limits.
@@ -106,7 +181,8 @@ On mobile it becomes compact section navigation.
 - **Places to investigate:** searchable place lists and links to findings.
 - **Compare what matters:** feature counts, charts, filtering, and sorting.
 - **Evidence table:** inspect the places supporting a particular feature count.
-- **AI brief:** shown when OpenAI produces a validated response.
+- **Insights to act on:** shown when OpenAI produces a validated brief.
+- **Discuss your results:** ask follow-up questions with the comparison already in context. The assistant can inspect returned places, search verified Qloo interests, and retrieve fresh city samples. Sources and actual research actions are expandable; follow-up samples do not replace the original report.
 - **Research activity:** actual tool steps and optional AI outcome.
 - **Before you commit:** a temporary site-visit checklist; checks are not saved or verified.
 
@@ -185,6 +261,8 @@ exports are research artifacts, not authenticated certificates from Qloo.
 A missing AI key should preserve Qloo results. A failed Qloo request must not be
 presented as a successful illustrative comparison.
 
+</details>
+
 ## Run locally
 
 Requirements: Node.js 22.12+ and npm. The project was checked with Node.js 24.18.
@@ -229,10 +307,12 @@ npm run preview
 
 ## AI cost controls
 
-The optional OpenAI Responses integration uses `gpt-5.6-luna`, reasoning effort
-`none`, and a 700-output-token limit. It sends a compact selection of evidence,
-not the full Qloo response. There are no automatic retries, external AI tools,
-or larger-model fallback. Identical summaries are cached for ten minutes per
+The optional AI brief uses `gpt-5.6-luna`, reasoning effort
+`none`, and a 1,400-output-token limit. It sends a compact selection of evidence,
+not the full Qloo response. The brief makes no tool calls and has no automatic retries
+or larger-model fallback. The interactive assistant has a separate budget: up to
+three Qloo tool calls and four AI calls per question, 1,600 output tokens per AI
+call, and a 50-second total deadline. Identical summaries are cached for ten minutes per
 process, up to 100 entries. Token usage is visible on successful briefs.
 
 Entity details are cached for ten minutes per process, up to 250 entries; concurrent
@@ -247,11 +327,13 @@ server/router.js       Validated same-origin API routes
 server/qloo.js         Live Qloo requests, paging, normalization and entity lookup
 server/research.js     Coverage assessment and conditional alternative search
 server/ai.js           Bounded, source-linked AI synthesis
+server/assistant.js    Results-aware conversation and validated Qloo tool execution
 server/cities.js       Server-side worldwide city suggestions
 shared/schema.js       Request/result validation
 shared/compare.js      Counts, source normalization, report generation
 shared/decision.js     Deterministic investor brief and requirement matching
 src/App.jsx            Homepage, forms, results, findings, saves and reports
+src/ResearchAssistant.jsx  Follow-up questions, sources and research activity
 src/CitySearch.jsx     City autocomplete
 src/scenarios.js       Editable input examples, not fictional results
 src/labels.js          Readable source labels
@@ -277,6 +359,7 @@ e2e/                   Mocked-provider browser workflows
 | GET | `/api/insights` | Validated place recommendations |
 | POST | `/api/compare` | Comparison; City vs City includes research |
 | POST | `/api/research` | Explicit bounded research workflow |
+| POST | `/api/assistant` | Results-aware conversation with bounded Qloo tools |
 | POST | `/api/places/page` | Another comparison-result page |
 | POST | `/api/findings/brief` | Optional AI analysis for an opened place |
 | GET | `/api/trends` | Validated, labeled raw trend response; no trend chart |
@@ -292,11 +375,14 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Latest code checks: lint and production build passed; 43 tests passed. A full-suite
-UI timing failure occurred during development; the isolated UI suite and final
-full suite passed. Browser workflows use mocked providers and are separate from
-unit tests. Desktop/mobile static previews were inspected, including a findings
-preview with no horizontal overflow at 390px. This does not verify live providers.
+Latest code checks: lint and production build passed; 57 unit/UI tests passed.
+Five browser workflows passed against the production build using intercepted
+assets and mocked providers, including the results assistant, new-tab finding restoration, AI error recovery, direct city entry,
+390px layout, persistence, and CSV export (using the real report handler).
+The sandbox blocks loopback connections, so the normal preview-server browser
+run was unavailable; an ignored local QA harness served the built files through
+Playwright interception using installed Chrome. Desktop/mobile screenshots were
+inspected. Provider integrations were tested with mocks, not live API calls.
 
 Successful hosted routing, current Qloo geographic/account coverage, and live
 OpenAI completion have not been verified in this execution environment. The user
@@ -304,6 +390,8 @@ previously demonstrated a successful authenticated Qloo search; that does not
 establish every Insights/detail combination. No deployment was performed here.
 
 ## Deployment
+
+**Live application:** [xenoscope.vercel.app](https://xenoscope.vercel.app/)
 
 Import the repository into Vercel. Use `npm ci`, `npm run build`, and output `dist`.
 Configure server keys there. `vercel.json` supplies API/SPA routing and headers.
@@ -340,3 +428,49 @@ Official references: [Qloo Insights](https://github.com/qloo/docs-public/blob/ma
 [entity lookup](https://github.com/qloo/docs-public/blob/main/reference/get-entities.md),
 [hackathon submission guide](https://github.com/qloo/qloo-hackathon-kit/blob/main/docs/SUBMISSION.md),
 and [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
+
+## Results research assistant
+
+Configure `OPENAI_API_KEY` and the existing `OPENAI_MODEL=gpt-5.6-luna` on the
+server. Missing configuration is shown explicitly. The assistant uses the OpenAI
+Responses API with strict function schemas and structured answers. It chooses
+whether to answer from the report or call `inspect_place`, `search_interests`,
+and `investigate_interest`. Interest investigations are restricted to verified
+tags and the original locations. Venue comparisons support place inspection and
+interest lookup, without inventing a city.
+
+Each question includes the business brief, original returned places (bounded
+descriptions and feature lists), deterministic requirement checks, research
+activity, the original AI brief, up to 24 previously cited follow-up places,
+and the most recent eight conversation messages. Sources are restricted
+to supplied or newly retrieved place IDs. Provider failures are surfaced in the
+action trace. Transport errors distinguish connection problems, platform timeouts,
+API access, and invalid/incomplete AI output. Failed questions remain editable,
+and unavailable visit briefs can be retried. AI request payloads omit raw source
+metadata; full metadata remains available for inspection and export.
+
+Navigation links open new tabs; in-page section links stay in the current tab.
+Up to three recent comparisons are cached separately in browser storage for
+24 hours so finding/report tabs can restore their context after refresh. If
+browser storage cannot hold the comparison, navigation falls back to the current
+tab to preserve it. These temporary snapshots are separate from saved reports.
+
+Conversations are kept in component memory while the results page
+is open; they are not included in saved reports or exports. Original reports are
+client supplied, as with the existing report APIs; follow-up tool results come
+from server-side Qloo calls. No web search, rent lookup, or demand prediction is
+provided. The assistant does not replace the original comparison with its samples.
+
+Implementation follows the [official OpenAI function-calling documentation](https://developers.openai.com/api/docs/guides/function-calling).
+
+---
+
+<div align="center">
+
+Built by [Muhammad Hamza Nadeem](https://github.com/mhamzanadeem) · [MIT licensed](LICENSE)
+
+[Try XenoScope](https://xenoscope.vercel.app/) · [Report an issue](https://github.com/mhamzanadeem/QLOO---XenoScope/issues)
+
+<sub>Stars, forks, build status, and license badges reflect their linked services. The README views badge counts badge views through hits.sh; it is not unique-user or website analytics.</sub>
+
+</div>
