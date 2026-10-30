@@ -14,12 +14,15 @@ build/
 
 # Test output and caches
 playwright-report/
+blob-report/
 test-results/
 coverage/
+.nyc_output/
 *.log
 *.tsbuildinfo
 .cache/
 .vite/
+.eslintcache
 __pycache__/
 *.py[cod]
 
@@ -35,8 +38,18 @@ __pycache__/
 /docs/commit-plan.md
 /Commit-XenoScope.ps1
 
+# Devpost screenshots and other local submission media
+# Runtime branding belongs in public/ and stays tracked.
+/submission-assets/
+
+# Temporary files and editor backups
+*.tmp
+*.bak
+*~
+
 # Editor and OS files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+Desktop.ini
