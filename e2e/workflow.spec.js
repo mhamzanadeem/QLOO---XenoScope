@@ -89,12 +89,15 @@ test("start exploring opens cities directly and results assistant keeps follow-u
   await expect(page.getByText("Visit the documented examples before committing.")).toHaveCount(2);
   expect(questions[1].history).toHaveLength(2);
   expect(questions[1].result.candidates).toHaveLength(2);
+  await expect(page.getByRole("button", { name: "Ask assistant" })).toBeDisabled();
+  await expect(page.getByText("0 of 2 questions left")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator("#decision").evaluate(element => element.scrollIntoView({ block: "start" }));
   await page.screenshot({ path: "test-results/results-mobile.png" });
   await page.locator("#research-assistant").evaluate(element => element.scrollIntoView({ block: "start" }));
   await page.screenshot({ path: "test-results/assistant-mobile.png" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(questions).toHaveLength(2);
 });
 test("assistant and visit brief recover from service errors without losing results", async ({ page }) => {
   await connected(page);

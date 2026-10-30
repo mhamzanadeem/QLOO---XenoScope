@@ -375,7 +375,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Latest code checks: lint and production build passed; 57 unit/UI tests passed.
+Latest code checks: lint and production build passed; 59 unit/UI tests passed.
 Five browser workflows passed against the production build using intercepted
 assets and mocked providers, including the results assistant, new-tab finding restoration, AI error recovery, direct city entry,
 390px layout, persistence, and CSV export (using the real report handler).
@@ -430,6 +430,17 @@ Official references: [Qloo Insights](https://github.com/qloo/docs-public/blob/ma
 and [OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
 
 ## Results research assistant
+
+Each exploration allows **two submitted questions**, including suggested prompts
+and retries. The remaining allowance is visible beside the comparison context;
+after the second submission, the composer and suggested prompts are disabled.
+Usage is stored per exploration in the browser and synchronized between tabs.
+A new comparison receives a new allowance. Failed submissions count because an
+upstream request may already have consumed tokens.
+
+The API also applies a per-instance two-submission backstop. This is not a global
+billing cap: browser storage can be cleared and serverless instances do not share
+memory. Strict enforcement across clients/instances requires a shared quota store.
 
 Configure `OPENAI_API_KEY` and the existing `OPENAI_MODEL=gpt-5.6-luna` on the
 server. Missing configuration is shown explicitly. The assistant uses the OpenAI

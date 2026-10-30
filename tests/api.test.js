@@ -7,6 +7,20 @@ import {
 } from "../server/qloo.js";
 import { handleRequest } from "../server/router.js";
 import { liveFixture } from "./live-fixture.js";
+it("rejects a third assistant submission for an exploration before making another AI call", async () => {
+  vi.stubEnv("OPENAI_API_KEY", "test");
+  vi.stubEnv("OPENAI_MODEL", "unsupported-test-model");
+  const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
+  const result = liveFixture();
+  const payload = { result, question: "What is still unknown?" };
+  expect((await call("/api/assistant", "POST", payload)).data.allowance.remaining).toBe(1);
+  expect((await call("/api/assistant", "POST", payload)).data.allowance.remaining).toBe(0);
+  const blocked = await call("/api/assistant", "POST", payload);
+  expect(blocked.status).toBe(429);
+  expect(blocked.data.error.code).toBe("EXPLORATION_LIMIT");
+  expect(blocked.headers["Retry-After"]).toBeUndefined();
+  expect(fetcher).not.toHaveBeenCalled();
+});
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();

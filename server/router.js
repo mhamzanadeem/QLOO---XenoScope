@@ -7,6 +7,7 @@ import { ApiError, qloo, readEntities, liveComparison, placeDetails } from "./ql
 
 import { researchComparison } from "./research.js";
 import { researchAssistant, assistantInput } from "./assistant.js";
+import { reserveAssistantQuestion } from "./assistantUsage.js";
 
 const searchSchema = z.string().trim().min(2).max(100);
 const uuid = z.uuid();
@@ -164,7 +165,9 @@ export async function handleRequest(req, res) {
       const input = await body(req, 4000000);
       const parsed = assistantInput.parse(input);
       const result = resultSchema.parse(input.result);
+      const allowance = process.env.OPENAI_API_KEY ? reserveAssistantQuestion(result.id) : undefined;
       data = await researchAssistant(result, parsed);
+      if (allowance) data.allowance = allowance;
     } else if (["/api/compare", "/api/research", "/api/places/page"].includes(path) && req.method === "POST") {
       const input = await body(req);
       if (!input || typeof input !== "object" || Array.isArray(input)) throw new ApiError(400, "INVALID_INPUT", "Send a JSON object.");
@@ -262,7 +265,7 @@ export async function handleRequest(req, res) {
   } catch (error) {
     const validation = error instanceof z.ZodError;
     res.statusCode = validation ? 400 : error.status || 500;
-    if (res.statusCode === 429) res.setHeader("Retry-After", "60");
+    if (res.statusCode === 429 && error.code !== "EXPLORATION_LIMIT") res.setHeader("Retry-After", "60");
     res.end(
       JSON.stringify({
         error: {
