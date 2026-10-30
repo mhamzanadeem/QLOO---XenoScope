@@ -9,7 +9,7 @@ it("uses one bounded no-reasoning call, validates evidence, and reuses identical
   const first = await investorAdvice(result, { env, fetcher });
   expect(first.status).toBe("ready");
   const request = JSON.parse(fetcher.mock.calls[0][1].body);
-  expect(request.reasoning.effort).toBe("none"); expect(request.max_output_tokens).toBe(700); expect(request.store).toBe(false);
+  expect(request.reasoning.effort).toBe("none"); expect(request.max_output_tokens).toBe(1400); expect(request.store).toBe(false);
   expect(request.tools).toBeUndefined();
   expect((await investorAdvice(result, { env, fetcher })).cached).toBe(true);
   expect(fetcher).toHaveBeenCalledTimes(1);
