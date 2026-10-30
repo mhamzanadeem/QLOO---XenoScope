@@ -6,6 +6,7 @@ import { buildReport, toCSV } from "../shared/compare.js";
 import { ApiError, qloo, readEntities, liveComparison, placeDetails } from "./qloo.js";
 
 import { researchComparison } from "./research.js";
+import { researchAssistant, assistantInput } from "./assistant.js";
 
 const searchSchema = z.string().trim().min(2).max(100);
 const uuid = z.uuid();
@@ -80,6 +81,7 @@ export async function handleRequest(req, res) {
       data = {
         liveOnly: true,
         liveConfigured: Boolean(process.env.QLOO_API_KEY),
+        assistantConfigured: Boolean(process.env.OPENAI_API_KEY),
         capabilities: {
           market: true,
           venue: true,
@@ -158,6 +160,11 @@ export async function handleRequest(req, res) {
         source: "live",
         entities: readEntities(await qloo("/v2/insights", params)),
       };
+    } else if (path === "/api/assistant" && req.method === "POST") {
+      const input = await body(req, 4000000);
+      const parsed = assistantInput.parse(input);
+      const result = resultSchema.parse(input.result);
+      data = await researchAssistant(result, parsed);
     } else if (["/api/compare", "/api/research", "/api/places/page"].includes(path) && req.method === "POST") {
       const input = await body(req);
       if (!input || typeof input !== "object" || Array.isArray(input)) throw new ApiError(400, "INVALID_INPUT", "Send a JSON object.");
@@ -229,6 +236,7 @@ export async function handleRequest(req, res) {
     } else {
       const known = [
         "/api/health",
+        "/api/assistant",
         "/api/cities/search",
         "/api/config",
         "/api/qloo/status",

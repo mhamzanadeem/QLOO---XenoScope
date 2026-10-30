@@ -6,6 +6,7 @@ import {
   liveComparison,
 } from "../server/qloo.js";
 import { handleRequest } from "../server/router.js";
+import { liveFixture } from "./live-fixture.js";
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
@@ -31,6 +32,14 @@ async function call(url, method = "GET", body) {
   );
   return { status: res.statusCode, headers, data: JSON.parse(output) };
 }
+it("validates assistant context and reports missing configuration without provider calls", async () => {
+  vi.stubEnv("OPENAI_API_KEY", "");
+  expect((await call("/api/assistant", "POST", { question: "Explain this", result: {} })).status).toBe(400);
+  const output = await call("/api/assistant", "POST", { question: "Explain this", result: liveFixture() });
+  expect(output.status).toBe(200);
+  expect(output.data.status).toBe("not-configured");
+  expect((await call("/api/assistant")).status).toBe(405);
+});
 it("returns a friendly error when the key is missing", async () => {
   await expect(qloo("/search", {}, { env: {} })).rejects.toMatchObject({
     status: 503,

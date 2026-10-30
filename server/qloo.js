@@ -36,7 +36,7 @@ export function upstreamError(status) {
 export async function qloo(
   path,
   params,
-  { fetcher = fetch, env = process.env } = {},
+  { fetcher = fetch, env = process.env, signal } = {},
 ) {
   if (!env.QLOO_API_KEY)
     throw new ApiError(
@@ -64,6 +64,7 @@ export async function qloo(
   let response;
   try {
     response = await fetcher(url, {
+      ...(signal ? { signal } : {}),
       headers: { "X-Api-Key": env.QLOO_API_KEY, accept: "application/json" },
     });
   } catch (error) {
@@ -179,12 +180,12 @@ export async function liveComparison(request, { page = 1 } = {}) {
 
 const detailCache = new Map();
 const detailPending = new Map();
-export async function placeDetails(id) {
+export async function placeDetails(id, { signal } = {}) {
   const cached = detailCache.get(id);
   if (cached && cached.expires > Date.now()) return cached.entity;
   if (detailPending.has(id)) return detailPending.get(id);
   const task = (async () => {
-    const data = await qloo("/entities", { entity_ids: id });
+    const data = await qloo("/entities", { entity_ids: id }, { signal });
     const rows = Array.isArray(data.results) ? data.results : data.results?.entities ?? data.entities;
     if (!Array.isArray(rows)) throw new ApiError(502, "MALFORMED_RESPONSE", "Qloo returned an unsupported place detail response.");
     const row = rows.find(entity => String(entity.entity_id ?? entity.id).toLowerCase() === id.toLowerCase());

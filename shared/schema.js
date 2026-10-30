@@ -80,7 +80,7 @@ const tag = z.object({
   name: z.string().max(200),
   category: z.string().max(200),
 });
-const entity = z.object({
+export const entitySchema = z.object({
   id: z.string().max(200),
   name: z.string().max(200),
   description: z.string().max(5000),
@@ -124,7 +124,7 @@ export const resultSchema = z
       .array(
         z.object({
           label: z.string().max(100),
-          entities: z.array(entity).max(150),
+          entities: z.array(entitySchema).max(150),
           provenance: z.object({
             provider: z.string().max(100),
             endpoint: z.string().max(100),
