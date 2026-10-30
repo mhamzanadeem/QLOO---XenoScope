@@ -1,5 +1,25 @@
 import { resultSchema } from "../shared/schema.js";
 const KEY = "xenoscope.explorations.v1";
+const NAV_KEY = "xenoscope.navigation.v1";
+const NAV_TTL = 24 * 60 * 60 * 1000;
+function navigationEntries() {
+  try {
+    const entries = JSON.parse(localStorage.getItem(NAV_KEY) || "[]");
+    return Array.isArray(entries) ? entries.filter(entry => entry.expires > Date.now() && resultSchema.safeParse(entry.result).success) : [];
+  } catch { return []; }
+}
+export function cacheNavigationResult(result) {
+  if (!resultSchema.safeParse(result).success) return false;
+  let entries = [{ result, expires: Date.now() + NAV_TTL }, ...navigationEntries().filter(entry => entry.result.id !== result.id)].slice(0, 3);
+  while (entries.length) {
+    try { localStorage.setItem(NAV_KEY, JSON.stringify(entries)); return true; }
+    catch { entries = entries.slice(0, -1); }
+  }
+  return false;
+}
+export function readNavigationResult(id) {
+  return navigationEntries().find(entry => entry.result.id === id)?.result || readSaved().find(result => result.id === id) || null;
+}
 export function readSaved() {
   try {
     const data = JSON.parse(localStorage.getItem(KEY) || "[]");
